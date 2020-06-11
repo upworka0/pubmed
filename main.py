@@ -4,6 +4,10 @@ from bs4 import BeautifulSoup
 import time
 import csv
 import re
+import pandas
+from pandas.io.excel import ExcelWriter
+import os
+import argparse
 
 key = "covid 19 hydroxychloroquine"
 
@@ -21,8 +25,12 @@ class ScrapingUnit:
         self.session.get(self.base_url)
         self.total_count = 0
         self.count = 0
-        self.results = []
-        self.filename = output
+        self.results = [[
+            "Pubmed link", "Title", "Abstract", "Authors", "Author email", "Author affiliation", "DOI",
+            "Full text link", "Mesh terms", "Publication type"
+        ]]
+        self.csv_file = "%s/%s.csv" % (output_folder, output.split(".")[0])
+        self.excel_file = "%s/%s.xlsx" % (output_folder, output.split(".")[0])
 
     def get_soup(self, response):
         """
@@ -59,7 +67,8 @@ class ScrapingUnit:
         try:
             return soup.find(ele, condition).text.strip()
         except Exception as e:
-            print(ele, condition)
+            # print(ele, condition)
+            pass
         return ""
 
     def ajdust_abstract(self, abstract):
@@ -194,18 +203,27 @@ class ScrapingUnit:
             infor['publication_types'] = "\n".join(self.get_publication_types(article))
             results.append(infor)
             self.count += 1
+
         lines = []
         for row in results:
             lines.append(list(row.values()))
-        self.write_csv(lines)
 
-    def write_csv(self, lines):
+        self.results = self.results + lines
+        self.write_csv()
+
+    def write_csv(self):
         """
         Write lines to csv named as filename
         """
-        with open(self.filename, 'a', encoding='utf-8', newline='') as writeFile:
+        with open(self.csv_file, 'w', encoding='utf-8', newline='') as writeFile:
             writer = csv.writer(writeFile, delimiter=',')
-            writer.writerows(lines)
+            writer.writerows(self.results)
+
+    def excel_out(self):
+        # convert csv file to excel format
+        with ExcelWriter(self.excel_file) as ew:
+            df = pandas.read_csv(self.csv_file)
+            df.to_excel(ew, sheet_name="sheet1", index=False)
 
     def next_page(self, page_number):
         """
@@ -230,17 +248,20 @@ class ScrapingUnit:
 
         res = self.session.post(url=url, data=data, headers=headers)
         soup = self.get_soup(res)
+        print("Page %s" % page_number)
         self.parse_soup(soup)
 
         if self.total_count > self.count:
-            self.next_page(page_number+1)
+            self.next_page(page_number + 1)
 
     def start(self):
+        print("Scraping is starting ...")
         data = {
             "term": self.keyword,
             "size": 200,
             "format": "abstract"
         }
+        print("Page 1")
         res = self.session.get(self.base_url, params=data)
         soup = self.get_soup(res)
         self.get_middleware_token(soup)
@@ -248,8 +269,21 @@ class ScrapingUnit:
         self.parse_soup(soup)
         if self.total_count > self.count:
             self.next_page(2)
+        self.excel_out()
+        print("Scraping was ended.")
 
 
 if __name__ == '__main__':
-    unit = ScrapingUnit(key, "output.csv")
+    # create output folder
+    output_folder = "output"
+    if not os.path.exists('output'):
+        os.mkdir("output")
+
+    # arg parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--keyword', type=str, required=True)
+    parser.add_argument('--output', type=str, required=True)
+    args = parser.parse_args()
+
+    unit = ScrapingUnit(args.keyword, args.output)
     unit.start()
