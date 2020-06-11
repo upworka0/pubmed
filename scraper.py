@@ -5,7 +5,7 @@ import time
 import csv
 import re
 
-key = "covid 19 treatment hydroxychloroquine study"
+key = "covid 19 hydroxychloroquine"
 
 
 class ScrapingUnit:
@@ -20,7 +20,7 @@ class ScrapingUnit:
         self.session = requests.session()
         self.session.get(self.base_url)
         self.total_count = 0
-        self.current_count = 0
+        self.count = 0
         self.results = []
         self.filename = output
 
@@ -193,6 +193,7 @@ class ScrapingUnit:
             infor['mesh_terms'] = "\n".join(self.get_mesh_terms(article))
             infor['publication_types'] = "\n".join(self.get_publication_types(article))
             results.append(infor)
+            self.count += 1
         lines = []
         for row in results:
             lines.append(list(row.values()))
@@ -202,11 +203,14 @@ class ScrapingUnit:
         """
         Write lines to csv named as filename
         """
-        with open(self.filename, 'w', encoding='utf-8', newline='') as writeFile:
+        with open(self.filename, 'a', encoding='utf-8', newline='') as writeFile:
             writer = csv.writer(writeFile, delimiter=',')
             writer.writerows(lines)
 
     def next_page(self, page_number):
+        """
+            Scrap Next page
+        """
         url = "%smore/" % self.base_url
         milliseconds = int(round(time.time() * 1000))
         data = {
@@ -226,6 +230,10 @@ class ScrapingUnit:
 
         res = self.session.post(url=url, data=data, headers=headers)
         soup = self.get_soup(res)
+        self.parse_soup(soup)
+
+        if self.total_count > self.count:
+            self.next_page(page_number+1)
 
     def start(self):
         data = {
@@ -238,6 +246,8 @@ class ScrapingUnit:
         self.get_middleware_token(soup)
         self.get_total_count(soup)
         self.parse_soup(soup)
+        if self.total_count > self.count:
+            self.next_page(2)
 
 
 if __name__ == '__main__':
