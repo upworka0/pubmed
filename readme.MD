@@ -2,7 +2,8 @@ Extracting data form Pubmed website using Python
 ================================================
 
 The purpose of this project is to extract data of articles from pubmed website using python.
-
+<br>
+Python version is Python3.
 
 Installation
 ------------
