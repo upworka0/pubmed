@@ -1,0 +1,16 @@
+venv
+.idea
+__pycache__/
+static/admin
+static/cms/
+static/rest_framework/
+static/suit/
+/test.py
+static/downloads
+
+### Django ###
+*.log
+*.pot
+*.pyc
+db.sqlite3
+db.sqlite3-journal
