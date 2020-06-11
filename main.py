@@ -9,8 +9,6 @@ from pandas.io.excel import ExcelWriter
 import os
 import argparse
 
-key = "covid 19 hydroxychloroquine"
-
 
 class ScrapingUnit:
     """
@@ -285,5 +283,5 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=str, required=True)
     args = parser.parse_args()
 
-    unit = ScrapingUnit(args.keyword, args.output)
+    unit = ScrapingUnit(keyword=args.keyword, output=args.output)
     unit.start()
