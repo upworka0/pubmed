@@ -271,17 +271,17 @@ class ScrapingUnit:
         print("Scraping was ended.")
 
 
-# if __name__ == '__main__':
-#     # create output folder
-#     output_folder = "output"
-#     if not os.path.exists('output'):
-#         os.mkdir("output")
-#
-#     # arg parser
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument('--keyword', type=str, required=True)
-#     parser.add_argument('--output', type=str, required=True)
-#     args = parser.parse_args()
-#
-#     unit = ScrapingUnit(keyword=args.keyword, output=args.output)
-#     unit.start()
+if __name__ == '__main__':
+    # create output folder
+    output_folder = "output"
+    if not os.path.exists('output'):
+        os.mkdir("output")
+
+    # arg parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--keyword', type=str, required=True)
+    parser.add_argument('--output', type=str, required=True)
+    args = parser.parse_args()
+
+    unit = ScrapingUnit(keyword=args.keyword, output=args.output)
+    unit.start()
