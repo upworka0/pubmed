@@ -21,7 +21,7 @@ def get_suggestions():
 
 @app.route('/scrap', methods=['POST'])
 def scrap():
-    keyword = request.args.get('keyword')
+    keyword = request.form.get('keyword')
     return keyword
 
 

@@ -34,4 +34,15 @@ $(document).ready(function(){
     		}, 200);
 		}
 	})
+
+    $('#submit').click(async function(eve){
+        var keyword = $('#query').val();
+        var data = {
+            keyword: keyword
+        };
+
+        var res = await AjaxRequest('/scrap','POST',data);
+        console.log(res);
+    })
+
 })
