@@ -17,6 +17,17 @@ function AjaxRequest(url, method='GET', data=null){
     });
 }
 
+// show Spinner
+function show_spinner(){
+    $('#spinner').css('display', 'block');
+}
+
+// hide Spinner
+function hide_spinner(){
+    $('#spinner').css('display', 'none');   
+}
+
+
 $(document).ready(function(){
 
 	$('#query').keypress(async function(eve){
@@ -35,14 +46,23 @@ $(document).ready(function(){
 		}
 	})
 
+    
+    // start scraping and show results in dataTable
     $('#submit').click(async function(eve){
         var keyword = $('#query').val();
+        if (keyword === ""){
+            alert('Type search keyword please');
+            return;
+        }
+
         var data = {
             keyword: keyword
         };
 
+        show_spinner();        
         var res = await AjaxRequest('/scrap','POST',data);
         console.log(res);
+        hide_spinner();
     })
 
 })
