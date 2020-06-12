@@ -1,4 +1,6 @@
 var suggestion_url = "/suggestions?term=";
+var excel_link = "";
+var results = [];
 
 // Async Ajax Request
 function AjaxRequest(url, method='GET', data=null){
@@ -28,41 +30,49 @@ function hide_spinner(){
 }
 
 
-$(document).ready(function(){
+// Export excel file
+function export_excel(){
+    console.log("clicked!");
+}
 
-	$('#query').keypress(async function(eve){
-		if (eve.keyCode == 32){
-			var term = $('#query').val();
-			var res = await AjaxRequest(suggestion_url + term);
-    		var data = JSON.parse(res);
+// show detail of row
+function show_detail(id){
+    $('#modal').modal('show');
+}
 
-    		$('#query').typeahead('destroy');
 
-    		setTimeout(function(){
-    			$("#query").typeahead({ 
-					source:data.suggestions
-				});
-    		}, 200);
-		}
-	})
 
-    
-    // start scraping and show results in dataTable
-    $('#submit').click(async function(eve){
-        var keyword = $('#query').val();
-        if (keyword === ""){
-            alert('Type search keyword please');
-            return;
-        }
+$('#query').keypress(async function(eve){
+    if (eve.keyCode == 32){
+        var term = $('#query').val();
+        var res = await AjaxRequest(suggestion_url + term);
+        var data = JSON.parse(res);
 
-        var data = {
-            keyword: keyword
-        };
+        $('#query').typeahead('destroy');
 
-        show_spinner();        
-        var res = await AjaxRequest('/scrap','POST',data);
-        console.log(res);
-        hide_spinner();
-    })
+        setTimeout(function(){
+            $("#query").typeahead({ 
+                source:data.suggestions
+            });
+        }, 200);
+    }
+})
 
+
+// start scraping and show results in dataTable
+$('#submit').click(async function(eve){
+    var keyword = $('#query').val();
+    if (keyword === ""){
+        alert('Type search keyword please');
+        return;
+    }
+
+    var data = {
+        keyword: keyword
+    };
+
+    show_spinner();        
+    var res = await AjaxRequest('/scrap','POST',data);
+    console.log(res);
+    hide_spinner();
 })
