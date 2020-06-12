@@ -2,12 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import time
-import csv
 import re
-import pandas
-from pandas.io.excel import ExcelWriter
-import os
-import argparse
 
 
 class ScrapingUnit:
@@ -15,20 +10,18 @@ class ScrapingUnit:
         Scraping Unit
         """
 
-    def __init__(self, keyword, output):
+    def __init__(self, keyword):
         self.base_url = "https://pubmed.ncbi.nlm.nih.gov/"
         self.csrfmiddlewaretoken = ""
         self.keyword = keyword
         self.session = requests.session()
-        self.session.get(self.base_url)
+        headers = {
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
+        }
+        self.session.get(self.base_url, headers=headers)
         self.total_count = 0
         self.count = 0
-        self.results = [[
-            "Pubmed link", "Title", "Abstract", "Authors", "Author email", "Author affiliation", "DOI",
-            "Full text link", "Mesh terms", "Publication type"
-        ]]
-        self.csv_file = "%s/%s.csv" % (output_folder, output.split(".")[0])
-        self.excel_file = "%s/%s.xlsx" % (output_folder, output.split(".")[0])
+        self.results = []
 
     def get_soup(self, response):
         """
@@ -135,7 +128,7 @@ class ScrapingUnit:
             "Pubmed link": "%s%s" % (self.base_url, pmid),
             "heading_title": heading_title,
             "abstract": abstract,
-            "authors_list": ", ".join(authors_list),
+            "authors_list": authors_list,
             "affiliation": affiliation,
             "author_email": author_email,
             "doi": doi,
@@ -196,32 +189,13 @@ class ScrapingUnit:
         results = []
         for article in articles_div:
             infor = self.get_header_information(article)
-            infor['full_text_links'] = "\n".join(self.get_full_text_links(article))
-            infor['mesh_terms'] = "\n".join(self.get_mesh_terms(article))
-            infor['publication_types'] = "\n".join(self.get_publication_types(article))
+            infor['full_text_links'] = self.get_full_text_links(article)
+            infor['mesh_terms'] = self.get_mesh_terms(article)
+            infor['publication_types'] = self.get_publication_types(article)
             results.append(infor)
             self.count += 1
 
-        lines = []
-        for row in results:
-            lines.append(list(row.values()))
-
-        self.results = self.results + lines
-        self.write_csv()
-
-    def write_csv(self):
-        """
-        Write lines to csv named as filename
-        """
-        with open(self.csv_file, 'w', encoding='utf-8', newline='') as writeFile:
-            writer = csv.writer(writeFile, delimiter=',')
-            writer.writerows(self.results)
-
-    def excel_out(self):
-        # convert csv file to excel format
-        with ExcelWriter(self.excel_file) as ew:
-            df = pandas.read_csv(self.csv_file)
-            df.to_excel(ew, sheet_name="sheet1", index=False)
+        self.results = self.results + results
 
     def next_page(self, page_number):
         """
@@ -252,7 +226,7 @@ class ScrapingUnit:
         if self.total_count > self.count:
             self.next_page(page_number + 1)
 
-    def start(self):
+    def do_scraping(self):
         print("Scraping is starting ...")
         data = {
             "term": self.keyword,
@@ -260,28 +234,15 @@ class ScrapingUnit:
             "format": "abstract"
         }
         print("Page 1")
-        res = self.session.get(self.base_url, params=data)
+        headers = {
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
+        }
+        res = self.session.get(self.base_url, params=data, headers=headers)
         soup = self.get_soup(res)
         self.get_middleware_token(soup)
         self.get_total_count(soup)
         self.parse_soup(soup)
         if self.total_count > self.count:
             self.next_page(2)
-        self.excel_out()
         print("Scraping was ended.")
-
-
-# if __name__ == '__main__':
-#     # create output folder
-#     output_folder = "output"
-#     if not os.path.exists('output'):
-#         os.mkdir("output")
-#
-#     # arg parser
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument('--keyword', type=str, required=True)
-#     parser.add_argument('--output', type=str, required=True)
-#     args = parser.parse_args()
-#
-#     unit = ScrapingUnit(keyword=args.keyword, output=args.output)
-#     unit.start()
+        return self.results

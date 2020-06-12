@@ -22,7 +22,9 @@ def get_suggestions():
 @app.route('/scrap', methods=['POST'])
 def scrap():
     keyword = request.form.get('keyword')
-    return keyword
+    unit = ScrapingUnit(keyword=keyword)
+    results = unit.do_scraping()
+    return jsonify(results)
 
 
 if __name__ == '__main__':
