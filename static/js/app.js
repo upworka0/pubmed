@@ -26,7 +26,7 @@ function show_spinner(){
 
 // hide Spinner
 function hide_spinner(){
-    $('#spinner').css('display', 'none');   
+    $('#spinner').css('display', 'none');
 }
 
 
@@ -71,7 +71,7 @@ $('#submit').click(async function(eve){
         keyword: keyword
     };
 
-    show_spinner();        
+    show_spinner();
     var res = await AjaxRequest('/scrap','POST',data);
     console.log(res);
     hide_spinner();
