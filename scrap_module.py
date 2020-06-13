@@ -3,6 +3,10 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import re
+import pandas
+from pandas.io.excel import ExcelWriter
+import os
+import csv
 
 
 class ScrapingUnit:
@@ -21,7 +25,15 @@ class ScrapingUnit:
         self.session.get(self.base_url, headers=headers)
         self.total_count = 0
         self.count = 0
-        self.results = []
+        self.results_dict = []
+
+        self.results = [[
+            "Pubmed link", "Title", "Abstract", "Authors", "Author email", "Author affiliation", "PMCID", "DOI",
+            "Full text link", "Mesh terms", "Publication type"
+        ]]
+
+        self.csv_file = "static/downloads/%s.csv" % keyword
+        self.excel_file = "static/downloads/%s.xlsx" % keyword
 
     def get_soup(self, response):
         """
@@ -197,7 +209,12 @@ class ScrapingUnit:
             results.append(infor)
             self.count += 1
 
-        self.results = self.results + results
+        lines = []
+        for row in results:
+            lines.append(list(row.values()))
+
+        self.results_dict = self.results_dict + results
+        self.results = self.results + lines
 
     def next_page(self, page_number):
         """
@@ -228,6 +245,20 @@ class ScrapingUnit:
         if self.total_count > self.count:
             self.next_page(page_number + 1)
 
+    def write_csv(self):
+        """
+        Write lines to csv named as filename
+        """
+        with open(self.csv_file, 'w', encoding='utf-8', newline='') as writeFile:
+            writer = csv.writer(writeFile, delimiter=',')
+            writer.writerows(self.results)
+
+    def excel_out(self):
+        # convert csv file to excel format
+        with ExcelWriter(self.excel_file) as ew:
+            df = pandas.read_csv(self.csv_file)
+            df.to_excel(ew, sheet_name="sheet1", index=False)
+
     def do_scraping(self):
         print("Scraping is starting ...")
         data = {
@@ -246,5 +277,8 @@ class ScrapingUnit:
         self.parse_soup(soup)
         if self.total_count > self.count:
             self.next_page(2)
+        self.write_csv()
+        self.excel_out()
+
         print("Scraping was ended.")
-        return self.results
+        return self.results_dict, self.excel_file

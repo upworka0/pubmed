@@ -23,9 +23,8 @@ def get_suggestions():
 def scrap():
     keyword = request.form.get('keyword')
     unit = ScrapingUnit(keyword=keyword)
-    results = unit.do_scraping()
-    return jsonify(results)
-
+    results, excel_file = unit.do_scraping()
+    return jsonify({'results': results, 'excel_file': excel_file})
 
 
 if __name__ == '__main__':

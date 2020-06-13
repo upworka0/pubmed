@@ -1,5 +1,5 @@
 var suggestion_url = "/suggestions?term=";
-var excel_link = "";
+var excel_file = "";
 var results = [];
 
 // Async Ajax Request
@@ -59,6 +59,12 @@ function show_detail(id){
 })
 */
 
+// Populate the table data
+function populate_table(){
+    $('#results_table tbody').html('');
+}
+
+populate_table();
 // start scraping and show results in dataTable
 $('#submit').click(async function(eve){
     var keyword = $('#query').val();
@@ -73,7 +79,8 @@ $('#submit').click(async function(eve){
 
     show_spinner();
     var res = await AjaxRequest('/scrap','POST',data);
-
-    console.log(res);
+    excel_file = res.excel_file;
+    results = res.results;
+    populate_table();    
     hide_spinner();
 })
