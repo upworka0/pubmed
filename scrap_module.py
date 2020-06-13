@@ -113,6 +113,7 @@ class ScrapingUnit:
         heading_title = self.get_text(full_view, 'h1', {'class': 'heading-title'})
         doi = self.get_text(full_view, 'span', {'class': 'citation-doi'}).strip('doi:')
         pmid = self.get_text(full_view, 'strong', {'class': 'current-id'})
+        pmcid = self.get_text(full_view, 'span', {'class': 'identifier pmc'}).strip("PMCID:").strip()
         authors_list = []
         authors_spans = article.find_all('span', {'class': 'authors-list-item'})
         for author_span in authors_spans:
@@ -128,9 +129,10 @@ class ScrapingUnit:
             "Pubmed link": "%s%s" % (self.base_url, pmid),
             "heading_title": heading_title,
             "abstract": abstract,
-            "authors_list": authors_list,
+            "authors_list": ", ".join(authors_list),
             "affiliation": affiliation,
             "author_email": author_email,
+            "pmcid": pmcid,
             "doi": doi,
         }
 
@@ -189,9 +191,9 @@ class ScrapingUnit:
         results = []
         for article in articles_div:
             infor = self.get_header_information(article)
-            infor['full_text_links'] = self.get_full_text_links(article)
-            infor['mesh_terms'] = self.get_mesh_terms(article)
-            infor['publication_types'] = self.get_publication_types(article)
+            infor['full_text_links'] = "\n".join(self.get_full_text_links(article))
+            infor['mesh_terms'] = "\n".join(self.get_mesh_terms(article))
+            infor['publication_types'] = "\n".join(self.get_publication_types(article))
             results.append(infor)
             self.count += 1
 

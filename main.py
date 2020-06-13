@@ -24,7 +24,7 @@ class ScrapingUnit:
         self.total_count = 0
         self.count = 0
         self.results = [[
-            "Pubmed link", "Title", "Abstract", "Authors", "Author email", "Author affiliation", "DOI",
+            "Pubmed link", "Title", "Abstract", "Authors", "Author email", "Author affiliation", "PMCID", "DOI",
             "Full text link", "Mesh terms", "Publication type"
         ]]
         self.csv_file = "%s/%s.csv" % (output_folder, output.split(".")[0])
@@ -120,6 +120,8 @@ class ScrapingUnit:
         heading_title = self.get_text(full_view, 'h1', {'class': 'heading-title'})
         doi = self.get_text(full_view, 'span', {'class': 'citation-doi'}).strip('doi:')
         pmid = self.get_text(full_view, 'strong', {'class': 'current-id'})
+        pmcid = self.get_text(full_view, 'span', {'class': 'identifier pmc'}).strip("PMCID:").strip()
+
         authors_list = []
         authors_spans = article.find_all('span', {'class': 'authors-list-item'})
         for author_span in authors_spans:
@@ -138,6 +140,7 @@ class ScrapingUnit:
             "authors_list": ", ".join(authors_list),
             "affiliation": affiliation,
             "author_email": author_email,
+            "pmcid": pmcid,
             "doi": doi,
         }
 

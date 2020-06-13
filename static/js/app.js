@@ -42,7 +42,7 @@ function show_detail(id){
 
 
 
-$('#query').keypress(async function(eve){
+/*$('#query').keypress(async function(eve){
     if (eve.keyCode == 32){
         var term = $('#query').val();
         var res = await AjaxRequest(suggestion_url + term);
@@ -57,7 +57,7 @@ $('#query').keypress(async function(eve){
         }, 200);
     }
 })
-
+*/
 
 // start scraping and show results in dataTable
 $('#submit').click(async function(eve){
@@ -73,6 +73,7 @@ $('#submit').click(async function(eve){
 
     show_spinner();
     var res = await AjaxRequest('/scrap','POST',data);
+
     console.log(res);
     hide_spinner();
 })
