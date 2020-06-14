@@ -44,6 +44,7 @@ function show_detail(id){
 
     $('#title').html(results[id]['heading_title']);
     $('#pubmed_link').html(results[id]['Pubmed link']);
+    $('#date').html(results[id]['date']);
     $('#abstract').html(results[id]['abstract']);
     $('#authors').html(results[id]['authors_list']);
     $('#author_email').html(results[id]['author_email']);
@@ -104,13 +105,14 @@ function populate_table(){
     var html = "";
     $('#table_div').empty();
 
-    var table = '<table id="results_table" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%"><thead><tr><th>_NO</th><th>Pubmed link</th><th>Title</th><th>Abstract</th><th>Authors</th><th>Author email</th><th>Author affiliation</th><th>PMCID</th><th>DOI</th><th>Full text link</th><th>Mesh terms</th><th>Publication type</th></tr></thead><tbody></tbody>';
+    var table = '<table id="results_table" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%"><thead><tr><th>_NO</th><th>Pubmed link</th><th>Title</th><th>Date</th><th>Abstract</th><th>Authors</th><th>Author email</th><th>Author affiliation</th><th>PMCID</th><th>DOI</th><th>Full text link</th><th>Mesh terms</th><th>Publication type</th></tr></thead><tbody></tbody>';
     $('#table_div').html(table);
 
     for ( var i = 0 ; i < results.length; i++ ){
         html += '<tr><td>' + (i+1) + "</td>";
         html +='<td onclick="show_detail(' + i + ')">' + results[i]["Pubmed link"] + "</td>";
         html +='<td onclick="show_detail(' + i + ')">' + results[i]["heading_title"] + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + results[i]["date"] + "</td>";
         html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["abstract"]) + "</td>";
         html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["authors_list"]) + "</td>";
         html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["affiliation"]) + "</td>";

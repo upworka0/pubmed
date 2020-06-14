@@ -28,7 +28,7 @@ class ScrapingUnit:
         self.results_dict = []
 
         self.results = [[
-            "Pubmed link", "Title", "Abstract", "Authors", "Author email", "Author affiliation", "PMCID", "DOI",
+            "Pubmed link", "Title", "Date", "Abstract", "Authors", "Author email", "Author affiliation", "PMCID", "DOI",
             "Full text link", "Mesh terms", "Publication type"
         ]]
 
@@ -115,6 +115,13 @@ class ScrapingUnit:
 
         return affiliation, author_email
 
+    def get_date(self, full_view):
+        """
+            Return date of Absctact
+            """
+        text = self.get_text(full_view, 'span', {"class": "cit"})
+        return text.split(";")[0]
+
     def get_header_information(self, article):
         """
         Return title, DOI, link, author names, abstract, affiliation and author email
@@ -126,6 +133,7 @@ class ScrapingUnit:
         doi = self.get_text(full_view, 'span', {'class': 'citation-doi'}).strip('doi:')
         pmid = self.get_text(full_view, 'strong', {'class': 'current-id'})
         pmcid = self.get_text(full_view, 'span', {'class': 'identifier pmc'}).strip("PMCID:").strip()
+        date = self.get_date(full_view)
         authors_list = []
         authors_spans = article.find_all('span', {'class': 'authors-list-item'})
         for author_span in authors_spans:
@@ -140,6 +148,7 @@ class ScrapingUnit:
         return {
             "Pubmed link": "%s%s" % (self.base_url, pmid),
             "heading_title": heading_title,
+            "date": date,
             "abstract": abstract,
             "authors_list": ", ".join(authors_list),
             "affiliation": affiliation,
