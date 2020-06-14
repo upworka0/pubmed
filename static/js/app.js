@@ -39,6 +39,10 @@ function export_excel(){
 
 // show detail of row
 function show_detail(id){
+
+    var html = "";
+    
+
     $('#modal').modal('show');
 }
 
@@ -83,6 +87,7 @@ function truncate(str, len=40) {
 })
 */
 
+
 // Populate the table data
 function populate_table(){
     var html = "";
@@ -92,25 +97,23 @@ function populate_table(){
     $('#table_div').html(table);
 
     for ( var i = 0 ; i < results.length; i++ ){
-        html += "<tr><td>" + (i+1) + "</td>";
-        html +="<td>" + results[i]["Pubmed link"] + "</td>";
-        html +="<td>" + results[i]["heading_title"] + "</td>";
-        html +="<td>" + truncate(results[i]["abstract"]) + "</td>";
-        html +="<td>" + truncate(results[i]["authors_list"]) + "</td>";
-        html +="<td>" + truncate(results[i]["affiliation"]) + "</td>";
-        html +="<td>" + results[i]["author_email"] + "</td>";
-        html +="<td>" + results[i]["pmcid"] + "</td>";
-        html +="<td>" + results[i]["doi"] + "</td>";
-        html +="<td>" + truncate(results[i]["full_text_links"]) + "</td>";
-        html +="<td>" + truncate(results[i]["mesh_terms"]) + "</td>";
-        html +="<td>" + truncate(results[i]["publication_types"]) + "</td>";
+        html += '<tr><td>' + (i+1) + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + results[i]["Pubmed link"] + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + results[i]["heading_title"] + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["abstract"]) + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["authors_list"]) + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["affiliation"]) + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + results[i]["author_email"] + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + results[i]["pmcid"] + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + results[i]["doi"] + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["full_text_links"]) + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["mesh_terms"]) + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["publication_types"]) + "</td>";
         html += "</tr>";
     }
 
-    console.log(html);
     $('#results_table tbody').html(html);
-    $('#results_table').DataTable( { } );
-    $('#export_button').attr('disabled', false);
+    $('#results_table').DataTable({});
 }
 
 
@@ -130,6 +133,12 @@ $('#submit').click(async function(eve){
     var res = await AjaxRequest('/scrap','POST',data);
     excel_file = res.excel_file;
     results = res.results;
-    populate_table();    
+    populate_table();
+
+    if (excel_file === "" || excel_file === null)
+        $('#export_button').attr('disabled', true);
+    else
+        $('#export_button').attr('disabled', false);
+
     hide_spinner();
 })
