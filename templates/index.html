@@ -66,7 +66,7 @@
 			            	</div>
 			            	<div class="col-md-4">
 			            		<div class="form-group">
-			            			<input type="button" name="export" value="Export file" class="btn btn-light btn-border" title="Export result" onclick="export_excel();" disabled>
+			            			<input type="button" id="export_button" name="export_button" value="Export file" class="btn btn-light btn-border" title="Export result" onclick="export_excel();" disabled>
 			            		</div>
 			            	</div>
 			            </div>
@@ -77,39 +77,28 @@
 	</div>
     <div class="col-md-12 mb-5">
 		<div class="pb-2 pt-2">
-    		<table id="results_table" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
-		        <thead>
-		            <tr>
-		            	<th>_NO</th>
-		                <th>Pubmed link</th>
-		                <th>Title</th>
-		                <th>Abstract</th>
-		                <th>Authors</th>
-		                <th>Author email</th>
-		                <th>Author affiliation</th>
-						<th>PMCID</th>
-		                <th>DOI</th>
-		                <th>Full text link</th>
-		                <th>Mesh terms</th>
-		                <th>Publication type</th>
-		            </tr>
-		        </thead>
-		        <tbody>
-			        <tr>
-		                <td>Tiger</td>
-		                <td>Nixon</td>
-		                <td>System Architect</td>
-		                <td>Edinburgh</td>
-		                <td>61</td>
-		                <td>2011/04/25</td>
-		                <td>$320,800</td>
-		                <td>5421</td>
-		                <td>t.nixon@datatables.net</td>
-		                <td>5421</td>
-		                <td>t.nixon@datatables.net</td>
-		            </tr>
-		        </tbody>
-		    </table>
+			<div id="table_div">
+	    		<table id="results_table" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
+			        <thead>
+			            <tr>
+			            	<th>_NO</th>
+			                <th>Pubmed link</th>
+			                <th>Title</th>
+			                <th>Abstract</th>
+			                <th>Authors</th>
+			                <th>Author email</th>
+			                <th>Author affiliation</th>
+							<th>PMCID</th>
+			                <th>DOI</th>
+			                <th>Full text link</th>
+			                <th>Mesh terms</th>
+			                <th>Publication type</th>
+			            </tr>
+			        </thead>
+			        <tbody>
+			        </tbody>
+			    </table>
+			</div>
     	</div>
     </div>
 
@@ -133,6 +122,8 @@
 	  	</div>
 	</div>
 	<!-- #END Modal -->
+
+	<a id="_iframe" download></a>
 </body>
   	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
@@ -153,7 +144,7 @@
 
 	<script type="text/javascript">
 		$(document).ready(function() {
-			var table = $('#results_table').DataTable( { } );
+			table = $('#results_table').DataTable( { } );
 		} );
 	</script>
 </html>
