@@ -41,7 +41,18 @@ function export_excel(){
 function show_detail(id){
 
     var html = "";
-    
+
+    $('#title').html(results[id]['heading_title']);
+    $('#pubmed_link').html(results[id]['Pubmed link']);
+    $('#abstract').html(results[id]['abstract']);
+    $('#authors').html(results[id]['authors_list']);
+    $('#author_email').html(results[id]['author_email']);
+    $('#author_affiliation').html(results[id]['affiliation']);
+    $('#pmcid').html(results[id]['pmcid']);
+    $('#doi').html(results[id]['doi']);
+    $('#full_text_link').html(results[id]['full_text_links']);
+    $('#mesh_terms').html(results[id]['mesh_terms']);
+    $('#publication_type').html(results[id]['publication_types']);
 
     $('#modal').modal('show');
 }

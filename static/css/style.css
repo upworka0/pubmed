@@ -169,3 +169,15 @@
 td{
     cursor: pointer;
 }
+
+.modal-lg{
+    max-width: 90%!important;
+}
+
+.bottom-line {
+    border-bottom: 1px solid #e9ecef;
+}
+
+hr {
+    margin-top: 0px!important;
+}
