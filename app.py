@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from flask import Flask, render_template, request, url_for, jsonify
+from flask import Flask, render_template, request, jsonify
 import requests
 from scrap_module import Scraping_Job
 

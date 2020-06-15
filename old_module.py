@@ -298,4 +298,20 @@ class ScrapingUnit:
         print("Scraping was ended.")
         return self.results_dict, self.excel_file
 
-        
+import math
+def get_thread_range(thread_count, total_count):
+    ranges = []
+    for i in range(thread_count):
+        ranges.append([])
+    count = 1
+    while count < total_count:
+        for i in range(thread_count):
+            count += 1
+            ranges[i].append(count)
+            if count == total_count:
+                break
+
+    return ranges
+
+print(get_thread_range(5, 14))
+

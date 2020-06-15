@@ -284,22 +284,24 @@ class ScrapingUnit:
 
 
 class MultiThread(threading.Thread):
-    def __init__(self, keyword, csrfmiddlewaretoken, page_number, session):
+    def __init__(self, keyword, csrfmiddlewaretoken, page_range, session):
         threading.Thread.__init__(self)
-        self.page_number = page_number
+        self.page_range = page_range
         self.keyword = keyword
         self.csrfmiddlewaretoken = csrfmiddlewaretoken
         self.session = session
 
     def run(self):
         global results, results_dict
-        unit = ScrapingUnit(keyword=self.keyword,
-                            csrfmiddlewaretoken=self.csrfmiddlewaretoken,
-                            page_number=self.page_number,
-                            session=self.session)
-        unit.do_scraping()
-        results += unit.results
-        results_dict += unit.results_dict
+        print(self.page_range)
+        for page_number in self.page_range:
+            unit = ScrapingUnit(keyword=self.keyword,
+                                csrfmiddlewaretoken=self.csrfmiddlewaretoken,
+                                page_number=page_number,
+                                session=self.session)
+            unit.do_scraping()
+            results += unit.results
+            results_dict += unit.results_dict
 
 
 def write_csv(csv_file, data):
@@ -316,6 +318,21 @@ def excel_out(csv_file, excel_file):
     with ExcelWriter(excel_file) as ew:
         df = pandas.read_csv(csv_file)
         df.to_excel(ew, sheet_name="sheet1", index=False)
+
+
+def get_thread_range(thread_count, total_count):
+    ranges = []
+    for i in range(thread_count):
+        ranges.append([])
+    count = 1
+    while count < total_count:
+        for i in range(thread_count):
+            count += 1
+            ranges[i].append(count)
+            if count == total_count:
+                break
+
+    return ranges
 
 
 def Scraping_Job(keyword, result_folder):
@@ -337,11 +354,15 @@ def Scraping_Job(keyword, result_folder):
     csrfmiddlewaretoken = unit.csrfmiddlewaretoken
 
     threads = []
-    for page in range(2, math.ceil(total_count/200)+1):
+    # Thread count
+    thread_count = 5
+    ranges = get_thread_range(thread_count=thread_count, total_count=math.ceil(total_count/200))
+
+    for page_range in ranges:
         thread = MultiThread(
             keyword=keyword,
             csrfmiddlewaretoken=csrfmiddlewaretoken,
-            page_number=page,
+            page_range=page_range,
             session=session
         )
         thread.start()
@@ -355,3 +376,4 @@ def Scraping_Job(keyword, result_folder):
     excel_file = "%s/%s.xlsx" % (result_folder, keyword)
     excel_out(csv_file, excel_file)
     return results_dict, excel_file
+
