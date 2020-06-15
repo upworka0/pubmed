@@ -19,10 +19,10 @@ How to run:
 
 Run following commands:
 
-    $ python main.py --keyword=<Keyword> --output=<output>
+    $ python main.py --keyword=<Keyword>
 
     Example
-    $ python main.py --keyword="coronavirus covid-19 pregnancy" --output="covid-pregnancy.csv"
+    $ python main.py --keyword="coronavirus covid-19 pregnancy"
     
 
 How to check results

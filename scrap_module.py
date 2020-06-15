@@ -7,33 +7,40 @@ import pandas
 from pandas.io.excel import ExcelWriter
 import os
 import csv
+import threading
+import math
 
+# Golbal Variables
+results = [[
+    "Pubmed link", "Title", "Date", "Abstract", "Authors", "Author affiliation", "Author email", "PMCID", "DOI",
+    "Full text link", "Mesh terms", "Publication type"
+]]
+results_dict = []
 
 class ScrapingUnit:
     """
         Scraping Unit
         """
 
-    def __init__(self, keyword):
-        self.base_url = "https://pubmed.ncbi.nlm.nih.gov/"
-        self.csrfmiddlewaretoken = ""
+    def __init__(self, keyword, csrfmiddlewaretoken="", page_number=1, session=None):
         self.keyword = keyword
-        self.session = requests.session()
-        headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
-        }
-        self.session.get(self.base_url, headers=headers)
+        self.base_url = "https://pubmed.ncbi.nlm.nih.gov/"
+        self.csrfmiddlewaretoken = csrfmiddlewaretoken
+        self.page_number = page_number
         self.total_count = 0
+
+        if session is None:
+            self.session = requests.session()
+            headers = {
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
+            }
+
+            self.session.get(self.base_url, headers=headers)
+        else:
+            self.session = session
         self.count = 0
         self.results_dict = []
-
-        self.results = [[
-            "Pubmed link", "Title", "Date", "Abstract", "Authors", "Author email", "Author affiliation", "PMCID", "DOI",
-            "Full text link", "Mesh terms", "Publication type"
-        ]]
-
-        self.csv_file = "static/downloads/%s.csv" % keyword
-        self.excel_file = "static/downloads/%s.xlsx" % keyword
+        self.results = []
 
     def get_soup(self, response):
         """
@@ -57,7 +64,8 @@ class ScrapingUnit:
         :param soup:
         :return: None
         """
-        self.total_count = int(soup.find('div', {'class': 'results-amount'}).text.strip().replace('results', ''))
+        self.total_count = int(soup.find('div', {'class': 'results-amount'}).
+                               text.strip().replace('results', '').replace(',', '').strip())
 
     def get_text(self, soup, ele, condition):
         """
@@ -209,23 +217,23 @@ class ScrapingUnit:
         :return: None
         """
         articles_div = soup.find_all('div', {"class": "results-article"})
-        results = []
+        results_data = []
         for article in articles_div:
             infor = self.get_header_information(article)
             infor['full_text_links'] = ",\n ".join(self.get_full_text_links(article))
             infor['mesh_terms'] = ", \n".join(self.get_mesh_terms(article))
             infor['publication_types'] = ", \n".join(self.get_publication_types(article))
-            results.append(infor)
+            results_data.append(infor)
             self.count += 1
 
         lines = []
-        for row in results:
+        for row in results_data:
             lines.append(list(row.values()))
 
-        self.results_dict = self.results_dict + results
+        self.results_dict = self.results_dict + results_data
         self.results = self.results + lines
 
-    def next_page(self, page_number):
+    def next_page(self):
         """
             Scrap Next page
         """
@@ -234,7 +242,7 @@ class ScrapingUnit:
         data = {
             "term": self.keyword,
             "size": 200,
-            "page": page_number,
+            "page": self.page_number,
             "no_cache": "yes",
             "no-cache": milliseconds,
             "csrfmiddlewaretoken": self.csrfmiddlewaretoken,
@@ -242,52 +250,108 @@ class ScrapingUnit:
         }
 
         headers = {
-            "referer": "https://pubmed.ncbi.nlm.nih.gov/?term=%s&size=200&pos=%s" % (self.keyword, page_number - 1),
+            "referer": "https://pubmed.ncbi.nlm.nih.gov/?term=%s&size=200&pos=%s" % (self.keyword, self.page_number - 1),
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
         }
 
         res = self.session.post(url=url, data=data, headers=headers)
         soup = self.get_soup(res)
-        print("Page %s" % page_number)
         self.parse_soup(soup)
-
-        if self.total_count > self.count:
-            self.next_page(page_number + 1)
-
-    def write_csv(self):
-        """
-        Write lines to csv named as filename
-        """
-        with open(self.csv_file, 'w', encoding='utf-8', newline='') as writeFile:
-            writer = csv.writer(writeFile, delimiter=',')
-            writer.writerows(self.results)
-
-    def excel_out(self):
-        # convert csv file to excel format
-        with ExcelWriter(self.excel_file) as ew:
-            df = pandas.read_csv(self.csv_file)
-            df.to_excel(ew, sheet_name="sheet1", index=False)
 
     def do_scraping(self):
-        print("Scraping is starting ...")
-        data = {
-            "term": self.keyword,
-            "size": 200,
-            "format": "abstract"
-        }
-        print("Page 1")
-        headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
-        }
-        res = self.session.get(self.base_url, params=data, headers=headers)
-        soup = self.get_soup(res)
-        self.get_middleware_token(soup)
-        self.get_total_count(soup)
-        self.parse_soup(soup)
-        if self.total_count > self.count:
-            self.next_page(2)
-        self.write_csv()
-        self.excel_out()
+        print("Scraping is starting in page %s" % self.page_number)
 
-        print("Scraping was ended.")
-        return self.results_dict, self.excel_file
+        if self.page_number < 2:
+            data = {
+                "term": self.keyword,
+                "size": 200,
+                "format": "abstract"
+            }
+            headers = {
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
+            }
+
+            res = self.session.get(self.base_url, params=data, headers=headers)
+
+            soup = self.get_soup(res)
+            self.get_middleware_token(soup)
+            self.get_total_count(soup)
+            self.parse_soup(soup)
+        else:
+            self.next_page()
+
+        print("Scraping was ended for page %s" % self.page_number)
+
+
+class MultiThread(threading.Thread):
+    def __init__(self, keyword, csrfmiddlewaretoken, page_number, session):
+        threading.Thread.__init__(self)
+        self.page_number = page_number
+        self.keyword = keyword
+        self.csrfmiddlewaretoken = csrfmiddlewaretoken
+        self.session = session
+
+    def run(self):
+        global results, results_dict
+        unit = ScrapingUnit(keyword=self.keyword,
+                            csrfmiddlewaretoken=self.csrfmiddlewaretoken,
+                            page_number=self.page_number,
+                            session=self.session)
+        unit.do_scraping()
+        results += unit.results
+        results_dict += unit.results_dict
+
+
+def write_csv(csv_file, data):
+    """
+    Write lines to csv named as filename
+    """
+    with open(csv_file, 'w', encoding='utf-8', newline='') as writeFile:
+        writer = csv.writer(writeFile, delimiter=',')
+        writer.writerows(data)
+
+
+def excel_out(csv_file, excel_file):
+    # convert csv file to excel format
+    with ExcelWriter(excel_file) as ew:
+        df = pandas.read_csv(csv_file)
+        df.to_excel(ew, sheet_name="sheet1", index=False)
+
+
+def Scraping_Job(keyword, result_folder):
+    global results, results_dict
+    results = [[
+        "Pubmed link", "Title", "Date", "Abstract", "Authors", "Author affiliation", "Author email", "PMCID", "DOI",
+        "Full text link", "Mesh terms", "Publication type"
+    ]]
+    results_dict = []
+
+    total_count = 0
+    unit = ScrapingUnit(keyword=keyword)
+    unit.do_scraping()
+    session = unit.session
+
+    results += unit.results
+    results_dict += unit.results_dict
+    total_count += unit.total_count
+    csrfmiddlewaretoken = unit.csrfmiddlewaretoken
+
+    threads = []
+    for page in range(2, math.ceil(total_count/200)+1):
+        thread = MultiThread(
+            keyword=keyword,
+            csrfmiddlewaretoken=csrfmiddlewaretoken,
+            page_number=page,
+            session=session
+        )
+        thread.start()
+        threads.append(thread)
+
+    for thread in threads:
+        thread.join()
+
+    csv_file = "%s/%s.csv" % (result_folder, keyword)
+    write_csv(csv_file, results)
+    excel_file = "%s/%s.xlsx" % (result_folder, keyword)
+    excel_out(csv_file, excel_file)
+    return results_dict, excel_file

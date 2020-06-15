@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from flask import Flask, render_template, request, url_for, jsonify
 import requests
-from scrap_module import ScrapingUnit
+from scrap_module import Scraping_Job
 
 app = Flask(__name__)
 
@@ -22,8 +22,7 @@ def get_suggestions():
 @app.route('/scrap', methods=['POST'])
 def scrap():
     keyword = request.form.get('keyword')
-    unit = ScrapingUnit(keyword=keyword)
-    results, excel_file = unit.do_scraping()
+    results, excel_file = Scraping_Job(keyword=keyword, result_folder="static/downloads")
     return jsonify({'results': results, 'excel_file': excel_file})
 
 

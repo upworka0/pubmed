@@ -14,6 +14,8 @@ function AjaxRequest(url, method='GET', data=null){
                 resolve(res);
             },
             error: function(err){
+                alert("Error was occurred!");
+                hide_spinner();
                 reject();
             }
        });
@@ -113,15 +115,15 @@ function populate_table(){
         html +='<td onclick="show_detail(' + i + ')">' + results[i]["Pubmed link"] + "</td>";
         html +='<td onclick="show_detail(' + i + ')">' + results[i]["heading_title"] + "</td>";
         html +='<td onclick="show_detail(' + i + ')">' + results[i]["date"] + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["abstract"]) + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["authors_list"]) + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["affiliation"]) + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + (results[i]["abstract"]) + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + (results[i]["authors_list"]) + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + (results[i]["affiliation"]) + "</td>";
         html +='<td onclick="show_detail(' + i + ')">' + results[i]["author_email"] + "</td>";
         html +='<td onclick="show_detail(' + i + ')">' + results[i]["pmcid"] + "</td>";
         html +='<td onclick="show_detail(' + i + ')">' + results[i]["doi"] + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["full_text_links"]) + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["mesh_terms"]) + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + truncate(results[i]["publication_types"]) + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + (results[i]["full_text_links"]) + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + (results[i]["mesh_terms"]) + "</td>";
+        html +='<td onclick="show_detail(' + i + ')">' + (results[i]["publication_types"]) + "</td>";
         html += "</tr>";
     }
 
