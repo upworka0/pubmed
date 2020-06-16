@@ -217,7 +217,7 @@ class ScrapingUnit:
         results_data = []
         for article in articles_div:
             infor = self.get_header_information(article)
-            infor['full_text_links'] = ",\n ".join(self.get_full_text_links(article))
+            infor['full_text_links'] = ",\n\n".join(self.get_full_text_links(article))
             infor['mesh_terms'] = ", \n".join(self.get_mesh_terms(article))
             infor['publication_types'] = ", \n".join(self.get_publication_types(article))
             results_data.append(infor)
