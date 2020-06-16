@@ -40,13 +40,13 @@ Installation
 
 Install python package using pip
 
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt
     
 How to run
 ----------
 
 Run following commands:
 
-    $ python app.py
+    $ python3 app.py
 
 and check the link http://127.0.0.1:5000/
