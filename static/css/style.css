@@ -181,3 +181,42 @@ td{
 hr {
     margin-top: 0px!important;
 }
+
+
+th, td { white-space: normal!important; }
+
+div.scrollable {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+}
+
+.width-320 {
+    width: 320px!important;
+}
+
+.width-300 {
+    width: 300px!important;
+}
+
+.width-100 {
+    width: 100px!important;
+}
+
+.width-200 {
+    width: 200px!important;
+}
+
+.width-250{
+    width: 250px!important;
+}
+
+.width-220 {
+    width: 220px!important;
+}
+
+.width-500 {
+    width: 500px!important;
+}

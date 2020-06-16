@@ -7,15 +7,9 @@ import pandas
 from pandas.io.excel import ExcelWriter
 import os
 import csv
-import threading
+from multiprocessing import Process, Manager
 import math
 
-# Golbal Variables
-results = [[
-    "Pubmed link", "Title", "Date", "Abstract", "Authors", "Author affiliation", "Author email", "PMCID", "DOI",
-    "Full text link", "Mesh terms", "Publication type"
-]]
-results_dict = []
 
 class ScrapingUnit:
     """
@@ -28,6 +22,8 @@ class ScrapingUnit:
         self.csrfmiddlewaretoken = csrfmiddlewaretoken
         self.page_number = page_number
         self.total_count = 0
+        self.results_dict = []
+        self.results = []
 
         if session is None:
             self.session = requests.session()
@@ -39,8 +35,6 @@ class ScrapingUnit:
         else:
             self.session = session
         self.count = 0
-        self.results_dict = []
-        self.results = []
 
     def get_soup(self, response):
         """
@@ -56,7 +50,10 @@ class ScrapingUnit:
         :param soup:
         :return: None
         """
-        self.csrfmiddlewaretoken = soup.find('input', {'name': 'csrfmiddlewaretoken'}).attrs['value']
+        try:
+            self.csrfmiddlewaretoken = soup.find('input', {'name': 'csrfmiddlewaretoken'}).attrs['value']
+        except Exception as e:
+            print(e, self.page_number)
 
     def get_total_count(self, soup):
         """
@@ -158,7 +155,7 @@ class ScrapingUnit:
             "heading_title": heading_title,
             "date": date,
             "abstract": abstract,
-            "authors_list": ", ".join(authors_list),
+            "authors_list": ", \n".join(authors_list),
             "affiliation": affiliation,
             "author_email": author_email,
             "pmcid": pmcid,
@@ -230,8 +227,8 @@ class ScrapingUnit:
         for row in results_data:
             lines.append(list(row.values()))
 
-        self.results_dict = self.results_dict + results_data
-        self.results = self.results + lines
+        self.results_dict += results_data
+        self.results += lines
 
     def next_page(self):
         """
@@ -253,9 +250,15 @@ class ScrapingUnit:
             "referer": "https://pubmed.ncbi.nlm.nih.gov/?term=%s&size=200&pos=%s" % (self.keyword, self.page_number - 1),
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
         }
+        res = None
+        while res is None:
+            try:
+                res = self.session.post(url=url, data=data, headers=headers, timeout=60)
+            except Exception as e:
+                print(e, self.page_number)
 
-        res = self.session.post(url=url, data=data, headers=headers)
         soup = self.get_soup(res)
+        self.get_middleware_token(soup)
         self.parse_soup(soup)
 
     def do_scraping(self):
@@ -283,23 +286,34 @@ class ScrapingUnit:
         print("Scraping was ended for page %s" % self.page_number)
 
 
-class MultiThread(threading.Thread):
-    def __init__(self, keyword, csrfmiddlewaretoken, page_number, session):
-        threading.Thread.__init__(self)
-        self.page_number = page_number
+class MultiThread(Process):
+    """
+        Threading module
+        """
+    def __init__(self, keyword, csrfmiddlewaretoken, page_range, session, results, results_dict):
+        super(MultiThread, self).__init__()
+        self.page_range = page_range
         self.keyword = keyword
         self.csrfmiddlewaretoken = csrfmiddlewaretoken
         self.session = session
+        self.results = results
+        self.results_dict = results_dict
 
     def run(self):
-        global results, results_dict
-        unit = ScrapingUnit(keyword=self.keyword,
-                            csrfmiddlewaretoken=self.csrfmiddlewaretoken,
-                            page_number=self.page_number,
-                            session=self.session)
-        unit.do_scraping()
-        results += unit.results
-        results_dict += unit.results_dict
+        print(self.page_range)
+        for page_number in self.page_range:
+            unit = ScrapingUnit(keyword=self.keyword,
+                                csrfmiddlewaretoken=self.csrfmiddlewaretoken,
+                                page_number=page_number,
+                                session=self.session)
+            while True:
+                unit.do_scraping()
+                if len(unit.results) > 0:
+                    print("Before", page_number, len(self.results), len(self.results_dict))
+                    self.results += unit.results
+                    self.results_dict += unit.results_dict
+                    print("After", page_number, len(self.results), len(self.results_dict))
+                    break
 
 
 def write_csv(csv_file, data):
@@ -318,13 +332,30 @@ def excel_out(csv_file, excel_file):
         df.to_excel(ew, sheet_name="sheet1", index=False)
 
 
+def get_thread_range(thread_count, total_count):
+    ranges = []
+    for i in range(thread_count):
+        ranges.append([])
+    count = 1
+    while count < total_count:
+        for i in range(thread_count):
+            count += 1
+            ranges[i].append(count)
+            if count == total_count:
+                break
+
+    return ranges
+
+
 def Scraping_Job(keyword, result_folder):
-    global results, results_dict
-    results = [[
+    manager = Manager()
+    results = manager.list()
+    results_dict = manager.list()
+
+    results.append([
         "Pubmed link", "Title", "Date", "Abstract", "Authors", "Author affiliation", "Author email", "PMCID", "DOI",
         "Full text link", "Mesh terms", "Publication type"
-    ]]
-    results_dict = []
+    ])
 
     total_count = 0
     unit = ScrapingUnit(keyword=keyword)
@@ -337,12 +368,18 @@ def Scraping_Job(keyword, result_folder):
     csrfmiddlewaretoken = unit.csrfmiddlewaretoken
 
     threads = []
-    for page in range(2, math.ceil(total_count/200)+1):
+    # Thread count
+    thread_count = 4
+    ranges = get_thread_range(thread_count=thread_count, total_count=math.ceil(total_count/200))
+
+    for page_range in ranges:
         thread = MultiThread(
             keyword=keyword,
             csrfmiddlewaretoken=csrfmiddlewaretoken,
-            page_number=page,
-            session=session
+            page_range=page_range,
+            session=session,
+            results=results,
+            results_dict=results_dict
         )
         thread.start()
         threads.append(thread)
@@ -351,7 +388,7 @@ def Scraping_Job(keyword, result_folder):
         thread.join()
 
     csv_file = "%s/%s.csv" % (result_folder, keyword)
-    write_csv(csv_file, results)
+    write_csv(csv_file, results[:])
     excel_file = "%s/%s.xlsx" % (result_folder, keyword)
     excel_out(csv_file, excel_file)
-    return results_dict, excel_file
+    return results_dict[:], excel_file
