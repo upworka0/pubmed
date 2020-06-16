@@ -43,26 +43,26 @@ function export_excel(){
 function show_detail(id){
 
     var html = "";
+    var ids = [
+        "heading_title", "date", "abstract",
+        "authors_list", "author_email", "affiliation",
+        "pmcid", "doi", "full_text_links", "mesh_terms",
+        "publication_type"
+    ];
 
-    $('#title').html(results[id]['heading_title']);
+    ids.forEach(function(ind, index){
+        $('#' + ind).html(results[id][ind]);
+    });
+
     $('#pubmed_link').html(results[id]['Pubmed link']);
-    $('#date').html(results[id]['date']);
-    $('#abstract').html(results[id]['abstract']);
-    $('#authors').html(results[id]['authors_list']);
-    $('#author_email').html(results[id]['author_email']);
-    $('#author_affiliation').html(results[id]['affiliation']);
-    $('#pmcid').html(results[id]['pmcid']);
-    $('#doi').html(results[id]['doi']);
-    $('#full_text_link').html(results[id]['full_text_links']);
-    $('#mesh_terms').html(results[id]['mesh_terms']);
-    $('#publication_type').html(results[id]['publication_types']);
-
+    $('#pubmed_link').attr("href", results[id]['Pubmed link']);
+    $('#author_email').attr("href", "mailto:" + results[id]['author_email']);
     $('#modal').modal('show');
 }
 
 
 //truncate long text
-function truncate(str, len=40) {
+function truncate(str, len=100) {
     /*
         truncate text
 
@@ -80,7 +80,7 @@ function truncate(str, len=40) {
     var ext = str.substring(str.length - 3, str.length);
     var filename = str.replace(ext,'');
 
-    return filename.substr(0, len-3) + (str.length > len ? '...' : '');
+    return filename.substr(0, len-3) + (str.length > len ? '\n ......' : '');
 }
 
 
@@ -93,7 +93,7 @@ function truncate(str, len=40) {
         $('#query').typeahead('destroy');
 
         setTimeout(function(){
-            $("#query").typeahead({ 
+            $("#query").typeahead({
                 source:data.suggestions
             });
         }, 200);
@@ -101,6 +101,9 @@ function truncate(str, len=40) {
 })
 */
 
+function reformat_text(text){
+    return text.split("\n").join("<br/>");
+}
 
 // Populate the table data
 function populate_table(){
@@ -112,36 +115,29 @@ function populate_table(){
 
     for ( var i = 0 ; i < results.length; i++ ){
         html += '<tr><td>' + (i+1) + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + results[i]["Pubmed link"] + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + results[i]["heading_title"] + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + results[i]["date"] + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + (results[i]["abstract"]) + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + (results[i]["authors_list"]) + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + (results[i]["affiliation"]) + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + results[i]["author_email"] + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + results[i]["pmcid"] + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + results[i]["doi"] + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + (results[i]["full_text_links"]) + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + (results[i]["mesh_terms"]) + "</td>";
-        html +='<td onclick="show_detail(' + i + ')">' + (results[i]["publication_types"]) + "</td>";
+        html +='<td><div class="width-320"><a href="' + results[i]["Pubmed link"] + '" target="_blank">' + results[i]["Pubmed link"] + "</a></div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-300">' + results[i]["heading_title"] + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-100">' + results[i]["date"] + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-500">' + reformat_text(truncate(results[i]["abstract"])) + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-300">' + reformat_text(truncate(results[i]["authors_list"])) + "</div></td>";
+        html +='<td><div class="width-300"><a href="mailto:' + results[i]["author_email"] + '">' + results[i]["author_email"] + "</a></div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-300">' + reformat_text(results[i]["affiliation"]) + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-100">' + results[i]["pmcid"] + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-300">' + results[i]["doi"] + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-500">' + reformat_text(results[i]["full_text_links"]) + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-300">' + reformat_text(truncate(results[i]["mesh_terms"])) + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-300">' + reformat_text(results[i]["publication_types"]) + "</div></td>";
         html += "</tr>";
     }
 
     $('#results_table tbody').html(html);
     $('#results_table').DataTable({
-        "columnDefs": [
-          { "width": "10px", "targets": 0 },
-          { "width": "40px", "targets": 1 },
-          { "width": "100px", "targets": 2 },
-          { "width": "70px", "targets": 3 },
-          { "width": "70px", "targets": 4 },
-          { "width": "70px", "targets": 5 }
-        ],
-        "scrollY": "555px",
-        "scrollX": false,
-        "paging": false,
-        "ordering": false,
-        "autoWidth": false,
+        autoWidth: false, //step 1
+        columnDefs: [
+           { width: '300px', targets: 0 }, //step 2, column 1 out of 4
+           { width: '300px', targets: 1 }, //step 2, column 2 out of 4
+           { width: '300px', targets: 2 }  //step 2, column 3 out of 4
+        ]
     });
 }
 
