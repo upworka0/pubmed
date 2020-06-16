@@ -115,18 +115,18 @@ function populate_table(){
 
     for ( var i = 0 ; i < results.length; i++ ){
         html += '<tr><td>' + (i+1) + "</td>";
-        html +='<td><div class="width-320"><a href="' + results[i]["Pubmed link"] + '" target="_blank">' + results[i]["Pubmed link"] + "</a></div></td>";
-        html +='<td onclick="show_detail(' + i + ')"><div class="width-300">' + results[i]["heading_title"] + "</div></td>";
-        html +='<td onclick="show_detail(' + i + ')"><div class="width-100">' + results[i]["date"] + "</div></td>";
-        html +='<td onclick="show_detail(' + i + ')"><div class="width-500">' + reformat_text(truncate(results[i]["abstract"])) + "</div></td>";
-        html +='<td onclick="show_detail(' + i + ')"><div class="width-300">' + reformat_text(truncate(results[i]["authors_list"])) + "</div></td>";
-        html +='<td><div class="width-300"><a href="mailto:' + results[i]["author_email"] + '">' + results[i]["author_email"] + "</a></div></td>";
-        html +='<td onclick="show_detail(' + i + ')"><div class="width-300">' + reformat_text(results[i]["affiliation"]) + "</div></td>";
-        html +='<td onclick="show_detail(' + i + ')"><div class="width-100">' + results[i]["pmcid"] + "</div></td>";
-        html +='<td onclick="show_detail(' + i + ')"><div class="width-300">' + results[i]["doi"] + "</div></td>";
-        html +='<td onclick="show_detail(' + i + ')"><div class="width-500">' + reformat_text(results[i]["full_text_links"]) + "</div></td>";
-        html +='<td onclick="show_detail(' + i + ')"><div class="width-300">' + reformat_text(truncate(results[i]["mesh_terms"])) + "</div></td>";
-        html +='<td onclick="show_detail(' + i + ')"><div class="width-300">' + reformat_text(results[i]["publication_types"]) + "</div></td>";
+        html +='<td><div class="width-100"><a href="' + results[i]["Pubmed link"] + '" target="_blank">' + results[i]["Pubmed link"] + "</a></div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-220">' + results[i]["heading_title"] + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-80">' + results[i]["date"] + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-250">' + reformat_text(truncate(results[i]["abstract"], 250)) + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-150">' + reformat_text(truncate(results[i]["authors_list"])) + "</div></td>";
+        html +='<td><div class="width-100"><a href="mailto:' + results[i]["author_email"] + '">' + results[i]["author_email"] + "</a></div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-200">' + reformat_text(results[i]["affiliation"]) + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-80">' + results[i]["pmcid"] + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-100">' + results[i]["doi"] + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-220">' + reformat_text(results[i]["full_text_links"]) + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-150">' + reformat_text(truncate(results[i]["mesh_terms"])) + "</div></td>";
+        html +='<td onclick="show_detail(' + i + ')"><div class="width-100">' + reformat_text(results[i]["publication_types"]) + "</div></td>";
         html += "</tr>";
     }
 

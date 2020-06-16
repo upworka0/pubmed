@@ -193,30 +193,43 @@ div.scrollable {
     overflow: auto;
 }
 
-.width-320 {
-    width: 320px!important;
+.width-150 {
+    width: 150px!important;
+    word-wrap: break-word;
 }
 
 .width-300 {
     width: 300px!important;
+    word-wrap: break-word;
+}
+
+.width-80 {
+    width: 80px!important;
+    word-wrap: break-word;
 }
 
 .width-100 {
     width: 100px!important;
+    word-wrap: break-word;
 }
+
 
 .width-200 {
     width: 200px!important;
+    word-wrap: break-word;
 }
 
 .width-250{
     width: 250px!important;
+    word-wrap: break-word;
 }
 
 .width-220 {
     width: 220px!important;
+    word-wrap: break-word;
 }
 
-.width-500 {
-    width: 500px!important;
+.width-400 {
+    width: 400px!important;
+    word-wrap: break-word;
 }
