@@ -128,7 +128,21 @@ function populate_table(){
     }
 
     $('#results_table tbody').html(html);
-    $('#results_table').DataTable({});
+    $('#results_table').DataTable({
+        "columnDefs": [
+          { "width": "10px", "targets": 0 },
+          { "width": "40px", "targets": 1 },
+          { "width": "100px", "targets": 2 },
+          { "width": "70px", "targets": 3 },
+          { "width": "70px", "targets": 4 },
+          { "width": "70px", "targets": 5 }
+        ],
+        "scrollY": "555px",
+        "scrollX": false,
+        "paging": false,
+        "ordering": false,
+        "autoWidth": false,
+    });
 }
 
 

@@ -6,7 +6,7 @@ static/cms/
 static/rest_framework/
 static/suit/
 /test.py
-static/downloads
+
 
 ### Django ###
 *.log
