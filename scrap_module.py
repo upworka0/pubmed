@@ -31,7 +31,9 @@ class ScrapingUnit:
                 "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
             }
 
-            self.session.get(self.base_url, headers=headers)
+            res = self.session.get(self.base_url, headers=headers)
+            soup = self.get_soup(res)
+            self.get_middleware_token(soup)
         else:
             self.session = session
         self.count = 0
@@ -140,7 +142,7 @@ class ScrapingUnit:
         pmcid = self.get_text(full_view, 'span', {'class': 'identifier pmc'}).strip("PMCID:").strip()
         date = self.get_date(full_view)
         authors_list = []
-        authors_spans = article.find_all('span', {'class': 'authors-list-item'})
+        authors_spans = full_view.find_all('span', {'class': 'authors-list-item'})
         for author_span in authors_spans:
             name = self.get_text(author_span, '', {'class': 'full-name'})
             authors_list.append(name)
@@ -248,6 +250,8 @@ class ScrapingUnit:
 
         headers = {
             "referer": "https://pubmed.ncbi.nlm.nih.gov/?term=%s&size=200&pos=%s" % (self.keyword, self.page_number - 1),
+            "origin": "https://pubmed.ncbi.nlm.nih.gov",
+            "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
         }
         res = None
@@ -304,8 +308,7 @@ class MultiThread(Process):
         for page_number in self.page_range:
             unit = ScrapingUnit(keyword=self.keyword,
                                 csrfmiddlewaretoken=self.csrfmiddlewaretoken,
-                                page_number=page_number,
-                                session=self.session)
+                                page_number=page_number)
             while True:
                 unit.do_scraping()
                 if len(unit.results) > 0:
