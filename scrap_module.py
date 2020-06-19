@@ -104,7 +104,7 @@ class ScrapingUnit:
         """
         affiliations_div = article.find('div', {'class': 'affiliations'})
         affiliation = ""
-        author_email = ""
+        author_email = []
         if affiliations_div:
             first = True
             for li in affiliations_div.find_all('li'):
@@ -116,9 +116,12 @@ class ScrapingUnit:
 
                 lst = re.findall('\S+@\S+', text)
                 if len(lst) > 0:
-                    author_email = lst[0]
-                    affiliation = text.strip(author_email).strip("Electronic address").strip("Electronic address:")
-                    author_email = author_email.strip(".")
+                    for email in lst:
+                        author_email.append(email.strip().strip(",").strip(".").strip(";"))
+                        text = text.replace(email, '').strip()
+
+                    affiliation = text.replace("Electronic address:", "").replace("Electronic address", '')\
+                        .strip().strip(",").strip(".").strip(";")
 
         return affiliation, author_email
 
@@ -159,7 +162,7 @@ class ScrapingUnit:
             "abstract": abstract,
             "authors_list": ", \n".join(authors_list),
             "affiliation": affiliation,
-            "author_email": author_email,
+            "author_email": ", \n".join(author_email),
             "pmcid": pmcid,
             "doi": doi,
         }
