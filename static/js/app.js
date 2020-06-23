@@ -46,7 +46,7 @@ function show_detail(id){
     var ids = [
         "heading_title", "date", "abstract",
         "authors_list", "author_email", "affiliation",
-        "pmcid", "doi", "full_text_links", "mesh_terms",
+        "pmcid", "doi", "mesh_terms",
         "publication_type"
     ];
 
@@ -57,6 +57,9 @@ function show_detail(id){
     $('#pubmed_link').html(results[id]['Pubmed link']);
     $('#pubmed_link').attr("href", results[id]['Pubmed link']);
     $('#author_email').attr("href", "mailto:" + results[id]['author_email']);
+
+    $('#full_text_links').html(convert_full_text_links(results[id]['full_text_links']));
+
     $('#modal').modal('show');
 }
 
@@ -105,6 +108,19 @@ function reformat_text(text){
     return text.split("\n").join("<br/>");
 }
 
+
+function convert_full_text_links(full_text_links){
+    /* convert full text links to links with a tag */
+    var tags = full_text_links.split("\n");
+    var html = "";
+    for ( var i = 0 ; i < tags.length; i++ ){
+        html += '<a href="' + tags[i] + '" target="_blank">' + tags[i] + '</a><br/>';
+    }
+
+    return html;
+}
+
+
 // Populate the table data
 function populate_table(){
     var html = "";
@@ -124,7 +140,7 @@ function populate_table(){
         html +='<td onclick="show_detail(' + i + ')"><div class="width-200">' + reformat_text(truncate(results[i]["affiliation"], 200)) + "</div></td>";
         html +='<td onclick="show_detail(' + i + ')"><div class="width-80">' + results[i]["pmcid"] + "</div></td>";
         html +='<td onclick="show_detail(' + i + ')"><div class="width-100">' + results[i]["doi"] + "</div></td>";
-        html +='<td onclick="show_detail(' + i + ')"><div class="width-220">' + reformat_text(results[i]["full_text_links"]) + "</div></td>";
+        html +='<td><div class="width-220">' + convert_full_text_links(results[i]["full_text_links"]) + "</div></td>";
         html +='<td onclick="show_detail(' + i + ')"><div class="width-150">' + reformat_text(truncate(results[i]["mesh_terms"])) + "</div></td>";
         html +='<td onclick="show_detail(' + i + ')"><div class="width-100">' + reformat_text(results[i]["publication_types"]) + "</div></td>";
         html += "</tr>";
