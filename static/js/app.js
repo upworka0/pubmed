@@ -111,10 +111,10 @@ function reformat_text(text){
 
 function convert_full_text_links(full_text_links){
     /* convert full text links to links with a tag */
-    var tags = full_text_links.split("\n");
+    var tags = full_text_links.split('\n');
     var html = "";
     for ( var i = 0 ; i < tags.length; i++ ){
-        html += '<a href="' + tags[i] + '" target="_blank">' + tags[i] + '</a><br/>';
+        html += '<a href="' + tags[i].replace(',','') + '" target="_blank">' + tags[i] + '</a><br/>';
     }
 
     return html;
@@ -181,5 +181,12 @@ $('#submit').click(async function(eve){
     else
         $('#export_button').attr('disabled', false);
 
+    hide_spinner();
+    $('#pdf_download').show();
+})
+
+$('#pdf_download').click(async function(eve){
+    show_spinner();
+    var res = await AjaxRequest('/download_pdf', 'GET');
     hide_spinner();
 })

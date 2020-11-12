@@ -5,11 +5,11 @@ import time
 import re
 import pandas
 from pandas.io.excel import ExcelWriter
-import os
+import os, sys
 import csv
 from multiprocessing import Process, Manager
 import math
-
+from werkzeug.utils import secure_filename
 
 class ScrapingUnit:
     """
@@ -278,17 +278,20 @@ class ScrapingUnit:
                 "format": "abstract"
             }
             headers = {
-                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36"
             }
 
             res = self.session.get(self.base_url, params=data, headers=headers)
-
+            print(res.status_code)
             soup = self.get_soup(res)
             self.get_middleware_token(soup)
             self.get_total_count(soup)
+            print(self.total_count)
             self.parse_soup(soup)
+            print(self.results_dict)
         else:
             self.next_page()
+            print(self.results_dict)
 
         print("Scraping was ended for page %s" % self.page_number)
 
@@ -375,7 +378,7 @@ def Scraping_Job(keyword, result_folder):
 
     threads = []
     # Thread count
-    thread_count = 4
+    thread_count = 2
     ranges = get_thread_range(thread_count=thread_count, total_count=math.ceil(total_count/200))
 
     for page_range in ranges:
@@ -393,8 +396,8 @@ def Scraping_Job(keyword, result_folder):
     for thread in threads:
         thread.join()
 
-    csv_file = "%s/%s.csv" % (result_folder, keyword)
+    csv_file = secure_filename("%s/%s.csv" % (result_folder, keyword))
     write_csv(csv_file, results[:])
     excel_file = "%s/%s.xlsx" % (result_folder, keyword)
     excel_out(csv_file, excel_file)
-    return results_dict[:], excel_file
+    return results_dict[:], excel_file, keyword

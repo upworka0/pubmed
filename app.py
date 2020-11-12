@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 import requests
 from scrap_module import Scraping_Job
 from datetime import datetime
+from pdf_downloader.downloader import Downloader
 
 app = Flask(__name__)
+app.secret_key = "mSu*B!m+RyQoG_pL3cE-ps~j%.?u-tbt;e-JvHsX$-l]6;Q}"
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -24,9 +26,21 @@ def get_suggestions():
 def scrap():
     print(datetime.now())
     keyword = request.form.get('keyword')
-    results, excel_file = Scraping_Job(keyword=keyword, result_folder="static/downloads")
+    results, excel_file, kw = Scraping_Job(keyword=keyword, result_folder="static/downloads")
+    session['csv_name'] = kw
     print(datetime.now())
     return jsonify({'results': results, 'excel_file': excel_file})
+
+
+@app.route('/download_pdf', methods=['GET'])
+def download_pdf():
+    if 'csv_name' in session:
+        csv_name = session['csv_name'] + ".csv"
+        downloader_obj = Downloader(csv_name)
+        downloader_obj.run()
+        session.pop('csv_name', None)
+        return jsonify({'results': "Check downloads folder."})
+    return jsonify({'results': "No csv found"})
 
 
 if __name__ == '__main__':
