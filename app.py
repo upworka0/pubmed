@@ -26,8 +26,8 @@ def get_suggestions():
 def scrap():
     print(datetime.now())
     keyword = request.form.get('keyword')
-    results, excel_file, kw = Scraping_Job(keyword=keyword, result_folder="static/downloads")
-    session['csv_name'] = kw
+    results, excel_file, file_name = Scraping_Job(keyword=keyword, result_folder="static/downloads")
+    session['csv_name'] = file_name
     print(datetime.now())
     return jsonify({'results': results, 'excel_file': excel_file})
 

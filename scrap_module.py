@@ -5,7 +5,7 @@ import time
 import re
 import pandas
 from pandas.io.excel import ExcelWriter
-import os, sys
+import os
 import csv
 from multiprocessing import Process, Manager
 import math
@@ -239,6 +239,9 @@ class ScrapingUnit:
         """
             Scrap Next page
         """
+
+        print("Scraping is starting in page %s" % self.page_number)
+
         url = "%smore/" % self.base_url
         milliseconds = int(round(time.time() * 1000))
         data = {
@@ -357,6 +360,8 @@ def get_thread_range(thread_count, total_count):
 
 
 def Scraping_Job(keyword, result_folder):
+    dirname = os.path.dirname(__file__)
+
     manager = Manager()
     results = manager.list()
     results_dict = manager.list()
@@ -396,8 +401,11 @@ def Scraping_Job(keyword, result_folder):
     for thread in threads:
         thread.join()
 
-    csv_file = secure_filename("%s/%s.csv" % (result_folder, keyword))
+    file_name = secure_filename(keyword)
+    csv_file = os.path.join(dirname, result_folder, "%s.csv" % file_name)
     write_csv(csv_file, results[:])
-    excel_file = "%s/%s.xlsx" % (result_folder, keyword)
-    excel_out(csv_file, excel_file)
-    return results_dict[:], excel_file, keyword
+
+    excel_relational_path = os.path.join(result_folder, "%s.xlsx" % file_name)
+    excel_absolute_path = os.path.join(dirname, excel_relational_path)
+    excel_out(csv_file, excel_absolute_path)
+    return results_dict[:], excel_relational_path, file_name
