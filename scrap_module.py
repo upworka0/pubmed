@@ -383,7 +383,7 @@ def Scraping_Job(keyword, result_folder):
 
     threads = []
     # Thread count
-    thread_count = 2
+    thread_count = 4
     ranges = get_thread_range(thread_count=thread_count, total_count=math.ceil(total_count/200))
 
     for page_range in ranges:
