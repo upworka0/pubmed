@@ -402,6 +402,8 @@ def Scraping_Job(keyword, result_folder):
         thread.join()
 
     file_name = secure_filename(keyword)
+    file_name = file_name[:200]
+
     csv_file = os.path.join(dirname, result_folder, "%s.csv" % file_name)
     write_csv(csv_file, results[:])
 
