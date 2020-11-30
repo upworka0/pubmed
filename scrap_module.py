@@ -277,7 +277,7 @@ class ScrapingUnit:
         if self.page_number < 2:
             data = {
                 "term": self.keyword,
-                "size": 200,
+                "size": 100,
                 "format": "abstract"
             }
             headers = {
@@ -291,10 +291,9 @@ class ScrapingUnit:
             self.get_total_count(soup)
             print(self.total_count)
             self.parse_soup(soup)
-            print(self.results_dict)
         else:
             self.next_page()
-            print(self.results_dict)
+            # print(self.results_dict)
 
         print("Scraping was ended for page %s" % self.page_number)
 

@@ -71,3 +71,10 @@ Set the startup application as Login Item in settings.
 Check web application
 ---------------------
  After login, you can check http://127.0.0.1:8000/
+
+
+
+
+ ### keywords
+
+ colorectal cancer AND ((y_10[Filter]) AND (ffrft[Filter]) AND (clinicaltrial[Filter] OR randomizedcontrolledtrial[Filter])) AND ((y_10[Filter]) AND (ffrft[Filter]) AND (clinicaltrial[Filter] OR randomizedcontrolledtrial[Filter])) AND ((y_10[Filter]) AND (ffrft[Filter]) AND (clinicaltrial[Filter] OR randomizedcontrolledtrial[Filter])) <br>
