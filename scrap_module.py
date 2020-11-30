@@ -246,7 +246,7 @@ class ScrapingUnit:
         milliseconds = int(round(time.time() * 1000))
         data = {
             "term": self.keyword,
-            "size": 200,
+            "size": 100,
             "page": self.page_number,
             "no_cache": "yes",
             "no-cache": milliseconds,
@@ -255,7 +255,7 @@ class ScrapingUnit:
         }
 
         headers = {
-            "referer": "https://pubmed.ncbi.nlm.nih.gov/?term=%s&size=200&pos=%s" % (self.keyword, self.page_number - 1),
+            "referer": "https://pubmed.ncbi.nlm.nih.gov/?term=%s&size=100&pos=%s" % (self.keyword, self.page_number - 1),
             "origin": "https://pubmed.ncbi.nlm.nih.gov",
             "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
@@ -383,7 +383,7 @@ def Scraping_Job(keyword, result_folder):
     threads = []
     # Thread count
     thread_count = 4
-    ranges = get_thread_range(thread_count=thread_count, total_count=math.ceil(total_count/200))
+    ranges = get_thread_range(thread_count=thread_count, total_count=math.ceil(total_count/100))
 
     for page_range in ranges:
         thread = MultiThread(
