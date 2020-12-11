@@ -2,6 +2,8 @@
 from flask import Flask, render_template, request, jsonify, session
 import requests
 from scrap_module import Scraping_Job
+from scrap_clinical import Pubmed_Job
+from clinical import get_numbers
 from datetime import datetime
 from pdf_downloader.downloader import Downloader
 
@@ -14,12 +16,30 @@ def index():
     return render_template("index.html", name="test")
 
 
+@app.route('/clinical', methods=['GET', 'POST'])
+def clinical():
+    return render_template("clinical.html")
+
+
 @app.route('/suggestions')
 def get_suggestions():
     term = request.args.get('term')
     url = "https://pubmed.ncbi.nlm.nih.gov/suggestions/?term=%s" % term
     res = requests.get(url)
     return res.text
+
+
+@app.route('/clinical_scrap', methods=['POST'])
+def clinical_scrap():
+    print(datetime.now())
+    keyword = request.form.get('keyword')
+    nct_numbers = get_numbers(keyword=keyword)
+    if nct_numbers is None:
+        return jsonify({'results': [], 'excel_file': ''})
+    results, excel_file, file_name = Pubmed_Job(keyword=keyword, numbers=nct_numbers, result_folder="static/downloads")
+    session['csv_name'] = file_name
+    print(datetime.now())
+    return jsonify({'results': results, 'excel_file': excel_file})
 
 
 @app.route('/scrap', methods=['POST'])
