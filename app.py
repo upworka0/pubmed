@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, jsonify, session
 import requests
 from scrap_module import Scraping_Job
-from scrap_clinical import Pubmed_Job
+from scrap_pubmed import Pubmed_Job
 from clinical import get_numbers
 from datetime import datetime
 from pdf_downloader.downloader import Downloader
@@ -32,7 +32,12 @@ def get_suggestions():
 @app.route('/clinical_scrap', methods=['POST'])
 def clinical_scrap():
     print(datetime.now())
-    keyword = request.form.get('keyword')
+    conditions_disease = request.form.get('conditions_disease')
+    other_terms = request.form.get('other_terms')
+    keyword = {
+        'conditions_disease': conditions_disease,
+        'other_terms': other_terms
+    }
     nct_numbers = get_numbers(keyword=keyword)
     if nct_numbers is None:
         return jsonify({'results': [], 'excel_file': ''})

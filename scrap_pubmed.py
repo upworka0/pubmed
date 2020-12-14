@@ -6,28 +6,41 @@ import pandas
 from pandas.io.excel import ExcelWriter
 import os
 import csv
+import time
+from dotenv import load_dotenv
 from multiprocessing import Process, Manager
 import math
 from werkzeug.utils import secure_filename
 
-PROXY = '199.189.86.111:10000'
-CREDENTIAL = 'cb78253c9ab1ad416dfe9027b7892823:676f1852dcf3b3c34be7269bafddcd49'
+load_dotenv()
+
+API_KEY = os.environ.get('API_KEY')
+PREMIUM_PROXY = os.environ.get('PREMIUM_PROXY')
+GENERAL_PROXY = os.environ.get('GENERAL_PROXY')
+CREDENTIAL = os.environ.get('CREDENTIAL')
+NCT_COUNT = 500
 
 
 class ScrapingUnit:
     """
         Scraping Unit
         """
-    def __init__(self, nct_record=None, csrfmiddlewaretoken="", session=None):
-        self.nct_record = nct_record
+    def __init__(self, nct_records=None, page_number=1, csrfmiddlewaretoken="", session=None):
+        self.nct_records = nct_records
         self.base_url = "https://pubmed.ncbi.nlm.nih.gov/"
         self.csrfmiddlewaretoken = csrfmiddlewaretoken
         self.total_count = 0
+        self.nct = ''
+        self.page_number = page_number
         self.results_dict = []
         self.results = []
-        self.proxy = {
-            'http': 'http://{}@{}'.format(CREDENTIAL, PROXY),
-            'https': 'https://{}@{}'.format(CREDENTIAL, PROXY)
+        self.premium_proxy = {
+            'http': 'http://{}@{}'.format(CREDENTIAL, PREMIUM_PROXY),
+            'https': 'https://{}@{}'.format(CREDENTIAL, PREMIUM_PROXY)
+        }
+        self.general_proxy = {
+            'http': 'http://{}@{}'.format(CREDENTIAL, GENERAL_PROXY),
+            'https': 'https://{}@{}'.format(CREDENTIAL, GENERAL_PROXY)
         }
 
         if session is None:
@@ -36,9 +49,16 @@ class ScrapingUnit:
                 "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
             }
 
-            res = self.session.get(self.base_url, headers=headers)
-            soup = self.get_soup(res)
-            self.get_middleware_token(soup)
+            while True:
+                try:
+                    res = self.session.get(self.base_url, headers=headers)
+                    soup = self.get_soup(res)
+                    self.get_middleware_token(soup)
+                    break
+                except Exception as e:
+                    print(e)
+                    continue
+
         else:
             self.session = session
         self.count = 0
@@ -74,7 +94,8 @@ class ScrapingUnit:
                 self.total_count = 0
             else:
                 self.total_count = int(results_text.replace('results', '').replace(',', '').strip())
-        except:
+        except Exception as ex:
+            print(type(ex).__name__, ex.args)
             self.total_count = 1
 
     def get_text(self, soup, ele, condition):
@@ -88,7 +109,6 @@ class ScrapingUnit:
         try:
             return soup.find(ele, condition).text.strip()
         except Exception as e:
-            # print(ele, condition)
             pass
         return ""
 
@@ -166,8 +186,8 @@ class ScrapingUnit:
         doi = self.get_text(full_view, 'span', {'class': 'citation-doi'}).strip('doi:')
         pmid = self.get_text(full_view, 'strong', {'class': 'current-id'})
         pmcid = self.get_text(full_view, 'span', {'class': 'identifier pmc'}).strip("PMCID:").strip()
-        # if pmcid == '':
-        #     pmcid = self.get_text(full_view, 'span', {'class': 'identifier pubmed'}).strip("PMCID:").strip()
+        if pmcid == '':
+            pmcid = self.get_text(full_view, 'span', {'class': 'identifier pubmed'}).strip("PMCID:").strip()
         date = self.get_date(full_view)
         authors_list = ''
         authors_spans = full_view.find_all('span', {'class': 'authors-list-item'})
@@ -240,6 +260,12 @@ class ScrapingUnit:
                     pub_types.append(button.text.strip())
         return pub_types
 
+    def get_NCT(self, article):
+        article_text = article.text
+        for nct in self.nct_records:
+            if nct[1] in article_text:
+                return nct
+
     def parse_soup(self, soup):
         """
         Parse soup object to get necessary information
@@ -253,10 +279,14 @@ class ScrapingUnit:
             infor['full_text_links'] = " | ".join(self.get_full_text_links(article))
             infor['mesh_terms'] = " | ".join(self.get_mesh_terms(article))
             infor['publication_types'] = " | ".join(self.get_publication_types(article))
-            infor['nct_number'] = self.nct_record[1]
-            infor['conditions'] = self.get_cond_inter_out(self.nct_record[4])
-            infor['interventions'] = self.get_cond_inter_out(self.nct_record[5])
-            infor['outcome_measures'] = self.get_cond_inter_out(self.nct_record[11]).replace('●', '').strip()
+            infor['nct_number'] = self.get_NCT(article)
+            if infor['nct_number'] is not None:
+                infor['nct_number'] = infor['nct_number'][1]
+            else:
+                continue
+            infor['conditions'] = self.get_cond_inter_out(self.get_NCT(article)[4])
+            infor['interventions'] = self.get_cond_inter_out(self.get_NCT(article)[5])
+            infor['outcome_measures'] = self.get_cond_inter_out(self.get_NCT(article)[11]).replace('●', '').strip()
             results_data.append(infor)
             self.count += 1
 
@@ -273,10 +303,10 @@ class ScrapingUnit:
         infor['full_text_links'] = " | ".join(self.get_full_text_links(soup))
         infor['mesh_terms'] = " | ".join(self.get_mesh_terms(soup))
         infor['publication_types'] = " | ".join(self.get_publication_types(soup))
-        infor['nct_number'] = self.nct_record[1]
-        infor['conditions'] = self.get_cond_inter_out(self.nct_record[4])
-        infor['interventions'] = self.get_cond_inter_out(self.nct_record[5])
-        infor['outcome_measures'] = self.get_cond_inter_out(self.nct_record[11])
+        infor['nct_number'] = self.get_NCT(soup)[1]
+        infor['conditions'] = self.get_cond_inter_out(self.get_NCT(soup)[4])
+        infor['interventions'] = self.get_cond_inter_out(self.get_NCT(soup)[5])
+        infor['outcome_measures'] = self.get_cond_inter_out(self.get_NCT(soup)[11]).replace('●', '').strip()
         results_data.append(infor)
         self.count += 1
 
@@ -287,29 +317,85 @@ class ScrapingUnit:
         self.results_dict += results_data
         self.results += lines
 
-    def do_scraping(self, keyword=None):
-        if keyword is None:
-            keyword = self.nct_record[1]
+    def next_page(self, keyword):
+        """
+            Scrap Next page
+        """
+
+        print("Scraping is starting in page %s" % self.page_number)
+
+        url = "%smore/" % self.base_url
+        milliseconds = int(round(time.time() * 1000))
         data = {
             "term": keyword,
-            "size": 100,
+            "size": 200,
+            "page": self.page_number,
+            "no_cache": "yes",
+            "no-cache": milliseconds,
+            "csrfmiddlewaretoken": self.csrfmiddlewaretoken,
             "format": "abstract"
         }
-        headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36"
-        }
 
-        res = self.session.get(self.base_url, params=data, headers=headers)
+        headers = {
+            "referer": "https://pubmed.ncbi.nlm.nih.gov/?term=%s&size=200&pos=%s" % (keyword, self.page_number - 1),
+            "origin": "https://pubmed.ncbi.nlm.nih.gov",
+            "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
+        }
+        res = None
+        while res is None:
+            try:
+                res = self.session.post(url=url, data=data, headers=headers, timeout=60)
+            except Exception as e:
+                print(e, self.page_number)
+
         soup = self.get_soup(res)
         self.get_middleware_token(soup)
-        self.get_total_count(soup)
-        print(res.status_code, self.total_count, keyword)
-        if self.total_count == 0 or self.nct_record is None:
+        self.parse_soup(soup)
+
+        if self.total_count > self.page_number * 200:
+            self.page_number += 1
+            return self.next_page(keyword=keyword)
+        return None
+
+    def do_scraping(self, keyword=None):
+        print("Scraping is starting in page %s" % self.page_number)
+
+        if self.page_number < 2:
+            data = {
+                "term": keyword,
+                "size": 200,
+                "format": "abstract",
+            }
+            headers = {
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36"
+            }
+
+            while True:
+                try:
+                    res = self.session.get(self.base_url, params=data, headers=headers)
+                    if res.status_code != requests.codes.ok:
+                        return None
+                    soup = self.get_soup(res)
+                    self.get_middleware_token(soup)
+                    self.get_total_count(soup)
+                    if self.total_count == 0:
+                        return None
+                    if self.total_count == 1:
+                        self.unique_soup(soup)
+                    else:
+                        self.parse_soup(soup)
+                    break
+                except Exception as e:
+                    print(e)
+                    continue
+            if self.total_count > self.page_number * 200:
+                self.page_number += 1
+                return self.do_scraping(keyword=keyword)
             return None
-        if self.total_count == 1:
-            self.unique_soup(soup)
         else:
-            self.parse_soup(soup)
+            self.next_page(keyword=keyword)
+        print("Scraping was ended for page %s" % self.page_number)
 
 
 class MultiThread(Process):
@@ -320,15 +406,35 @@ class MultiThread(Process):
         super(MultiThread, self).__init__()
         self._range = _range
         self.nct_records = nct_records
+        self._rearrange = []
         self.csrfmiddlewaretoken = csrfmiddlewaretoken
         self.session = session
         self.results = results
         self.results_dict = results_dict
 
+    def make_rearrange(self):
+        count = len(self._range) // NCT_COUNT + 1
+        for i in range(count):
+            item = []
+            if i == count-1:
+                for j in range(i*NCT_COUNT, len(self._range)):
+                    item.append(self._range[j])
+            else:
+                for j in range(i*NCT_COUNT, (i+1)*NCT_COUNT):
+                    item.append(self._range[j])
+            self._rearrange.append(item)
+
+    def make_query(self, _ran):
+        query = ''
+        for i in _ran:
+            query += ') OR (' + self.nct_records[i][1]
+        return query[5:] + ')'
+
     def run(self):
-        for _number in self._range:
-            unit = ScrapingUnit(nct_record=self.nct_records[_number], csrfmiddlewaretoken=self.csrfmiddlewaretoken)
-            unit.do_scraping()
+        self.make_rearrange()
+        unit = ScrapingUnit(nct_records=self.nct_records, csrfmiddlewaretoken=self.csrfmiddlewaretoken)
+        for _ran in self._rearrange:
+            unit.do_scraping(keyword=self.make_query(_ran))
             if len(unit.results) > 0:
                 print("Before", len(self.results), len(self.results_dict))
                 self.results += unit.results
@@ -380,13 +486,12 @@ def Pubmed_Job(keyword, numbers, result_folder):
     ])
 
     unit = ScrapingUnit()
-    unit.do_scraping(numbers[0])
     session = unit.session
     csrfmiddlewaretoken = unit.csrfmiddlewaretoken
 
     threads = []
     # Thread count
-    thread_count = 20
+    thread_count = 5
     ranges = get_thread_range(thread_count=thread_count, total_count=math.ceil(len(numbers)))
 
     for _range in ranges:
@@ -403,6 +508,8 @@ def Pubmed_Job(keyword, numbers, result_folder):
 
     for thread in threads:
         thread.join()
+
+    keyword = '{} {}'.format(keyword['conditions_disease'], keyword['other_terms'])
 
     file_name = secure_filename(keyword)
     file_name = file_name[:200]

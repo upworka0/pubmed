@@ -1,13 +1,16 @@
 import requests
 import re
-import json
+import os
+from dotenv import load_dotenv
 from time import sleep
 from bs4 import BeautifulSoup
-
+from multiprocessing import Process, Manager
 BASE_URL = "https://www.clinicaltrials.gov/ct2/results"
-API_KEY = "H5z4wFvrJCanTSRodUfYDGW9XhxtKm2L"
-PROXY = '199.189.86.111:9500'
-CREDENTIAL = 'cb78253c9ab1ad416dfe9027b7892823:676f1852dcf3b3c34be7269bafddcd49'
+load_dotenv()
+
+API_KEY = os.environ.get('API_KEY')
+PREMIUM_PROXY = os.environ.get('PREMIUM_PROXY')
+CREDENTIAL = os.environ.get('CREDENTIAL')
 
 
 def parse_soup(content):
@@ -15,59 +18,73 @@ def parse_soup(content):
 
 
 def get_query_id(content):
+    total_count = 0
     soup = parse_soup(content)
+
+    wrappers = soup.select('.ct-inner_content_wrapper > .w3-center')
+    if len(wrappers) > 1:
+        total_count = int(wrappers[0].text.split(' ')[0])
+
     script = soup.find('script', text=re.compile('use strict'))
     if script:
         script_text = script.contents[0]
         _group = re.search('ct2/results/rpc/(.*)"', script_text)
         if _group is not None:
-            return _group.group(1)
+            return _group.group(1), total_count
         else:
             print('Not found group on script tag')
-        return None
+        return None, None
     else:
         print('Not found Script Tag')
 
 
+class MultiThread(Process):
+    """
+        Threading module
+        """
+    def __init__(self, _range, query_id, results):
+        super(MultiThread, self).__init__()
+        self._range = _range
+        self.query_id = query_id
+        self.results = results
+
+    def run(self):
+        clinical = Clinical(query_id=self.query_id, page_range=self._range)
+        records = clinical.run()
+        self.results.extend(records)
+
+
 class Clinical:
 
-    def __init__(self):
+    def __init__(self, query_id=None, page_range=None):
         self.post_url = ''
+        self.query_id = query_id
+        self.page_range = page_range
         self.header = {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
         }
-        self.proxy_endpoint = {
-            'http': 'http://{}@{}'.format(CREDENTIAL, PROXY),
-            'https': 'https://{}@{}'.format(CREDENTIAL, PROXY),
+        self.premium_proxy = {
+            'http': 'http://{}@{}'.format(CREDENTIAL, PREMIUM_PROXY),
+            'https': 'https://{}@{}'.format(CREDENTIAL, PREMIUM_PROXY)
         }
 
-    def run(self, keyword):
+    def get_thread_count(self, keyword):
         params = {
-            'cond': keyword
+            'cond': keyword['conditions_disease'],
+            'term': keyword['other_terms']
         }
         res = self.do_request(BASE_URL, params)
         if res is not None:
-            query_id = get_query_id(res.text)
-            if query_id is not None:
-                self.post_url = BASE_URL + '/rpc/' + query_id
-                results = self.rpc_request()
-                return results
-        else:
-            return None
+            return get_query_id(res.text)
 
-    def rpc_request(self):
-        start = 0
+    def run(self):
         records = []
-        while True:
-            response = self.post_request(start)
-            if response is None:
-                continue
-            if len(response['data']) == 0:
+        for page in range(self.page_range[0], self.page_range[1]):
+            response = self.post_request(page*100)
+            if response is None or len(response['data']) == 0:
                 break
-            total = response['recordsFiltered']
-            start += 100
-            records.extend(response['data'])
-            print(len(records), total)
+            # total = response['recordsFiltered']
+            records += response['data']
         return records
 
     def post_request(self, start):
@@ -75,8 +92,9 @@ class Clinical:
             'start': start,
             'length': 100
         }
+        self.post_url = BASE_URL + '/rpc/' + self.query_id
         try:
-            response = requests.post(url=self.post_url, headers=self.header, data=payload, proxies=self.proxy_endpoint)
+            response = requests.post(url=self.post_url, headers=self.header, data=payload)
             return response.json()
         except ConnectionError:
             print('Connection Error')
@@ -88,7 +106,7 @@ class Clinical:
 
     def do_request(self, url, params):
         try:
-            response = requests.request('GET', url=url, headers=self.header, params=params, proxies=self.proxy_endpoint)
+            response = requests.request('GET', url=url, headers=self.header, params=params)
             return response
         except ConnectionError:
             print('Connection Error')
@@ -99,6 +117,48 @@ class Clinical:
             return None
 
 
+def get_thread_range(thread_count, total_count):
+    _range = []
+    end_number = total_count//100
+    if total_count % 100 != 0:
+        end_number += 1
+    interval = end_number // thread_count + 1
+    for i in range(thread_count):
+        if (i+1)*interval > end_number:
+            if end_number > i*interval:
+                _range.append([i*interval, end_number+1])
+            break
+        thread_range = [i*interval, (i+1)*interval]
+        _range.append(thread_range)
+    return _range
+
+
 def get_numbers(keyword):
     clinical = Clinical()
-    return clinical.run(keyword=keyword)
+
+    manager = Manager()
+    results = manager.list()
+
+    query_id, total_count = clinical.get_thread_count(keyword=keyword)
+
+    if total_count > 20000:
+        total_count = 20000
+
+    if total_count > 0:
+        threads = []
+        thread_count = 20
+        ranges = get_thread_range(thread_count=thread_count, total_count=total_count)
+        for _range in ranges:
+            thread = MultiThread(
+                query_id=query_id,
+                _range=_range,
+                results=results,
+            )
+            thread.start()
+            threads.append(thread)
+
+        for thread in threads:
+            thread.join()
+        print("Total Count: ", len(results), ranges)
+        return results
+    return None

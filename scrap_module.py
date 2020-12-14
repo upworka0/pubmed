@@ -11,6 +11,7 @@ from multiprocessing import Process, Manager
 import math
 from werkzeug.utils import secure_filename
 
+
 class ScrapingUnit:
     """
         Scraping Unit
@@ -63,8 +64,11 @@ class ScrapingUnit:
         :param soup:
         :return: None
         """
-        self.total_count = int(soup.find('div', {'class': 'results-amount'}).
+        if soup.find('div', {'class': 'results-amount'}):
+            self.total_count = int(soup.find('div', {'class': 'results-amount'}).
                                text.strip().replace('results', '').replace(',', '').strip())
+        else:
+            self.total_count = 0
 
     def get_text(self, soup, ele, condition):
         """
@@ -147,7 +151,7 @@ class ScrapingUnit:
         authors_list = []
         authors_spans = full_view.find_all('span', {'class': 'authors-list-item'})
         for author_span in authors_spans:
-            name = self.get_text(author_span, '', {'class': 'full-name'})
+            name = self.get_text(author_span, 'a', {'class': 'full-name'})
             authors_list.append(name)
 
         abstract = self.get_text(article, 'div', {'class': 'abstract-content selected'}).replace('\n\n', '')

@@ -251,19 +251,20 @@ $('#submit').click(async function(eve){
 })
 
 $('#clinical_submit').click(async function(eve){
-    var keyword = $('#query').val();
-    if (keyword === ""){
+    var conditions_disease = $('#conditions_disease').val();
+    var other_terms = $('#other_terms').val();
+    if (conditions_disease === "" && other_terms === ""){
         alert('Type search keyword please');
         return;
     }
 
     var data = {
-        keyword: keyword
+        conditions_disease: conditions_disease,
+        other_terms: other_terms
     };
 
     show_spinner();
     var res = await AjaxRequest('/clinical_scrap','POST',data);
-    console.log(res);
     excel_file = res.excel_file;
     results = res.results;
     if (results.length === 0) {
