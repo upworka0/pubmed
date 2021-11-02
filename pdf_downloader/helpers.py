@@ -4,13 +4,18 @@ import pandas as pd
 import time
 from functools import wraps
 from pandas.io.excel import ExcelWriter
+from urllib.parse import urlparse
+import shutil
+from .exceptions import CanNotChangeFileName
+
 
 pd.set_option('display.max_rows', 1000)
 NIHGOV_BASE = "ncbi.nlm.nih.gov"
 
 
 def retry(ExceptionToCheck, tries=4, delay=3, backoff=2, logger=None):
-    """Retry calling the decorated function using an exponential backoff.
+    """
+    Retry calling the decorated function using an exponential backoff.
     http://www.saltycrane.com/blog/2009/11/trying-out-retry-decorator-python/
     original from: http://wiki.python.org/moin/PythonDecoratorLibrary#Retry
     :param ExceptionToCheck: the exception to check. may be a tuple of
@@ -100,3 +105,19 @@ def get_filename_from_cd(cd):
     if len(fname) == 0:
         return None
     return fname[0].strip("\"")
+
+
+def get_unique_id_from_url(url):
+    """
+    :param url:
+    :return: str
+    """
+    unique_id = urlparse(url).path.strip("/")
+    return unique_id
+
+
+def rename_file(old_file_name, new_file_name):
+    try:
+        shutil.move(old_file_name, new_file_name)
+    except Exception:
+        raise CanNotChangeFileName

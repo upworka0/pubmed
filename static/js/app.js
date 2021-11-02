@@ -247,8 +247,9 @@ $('#submit').click(async function(eve){
         $('#export_button').attr('disabled', false);
 
     hide_spinner();
-//    $('#pdf_download').show();
-})
+    $('#pdf_download').show();
+    $('#extract_texts').show();
+});
 
 $('#clinical_submit').click(async function(eve){
     var conditions_disease = $('#conditions_disease').val();
@@ -278,11 +279,18 @@ $('#clinical_submit').click(async function(eve){
         $('#export_button').attr('disabled', false);
 
     hide_spinner();
-//    $('#pdf_download').show();
-})
+    $('#pdf_download').show();
+    $('#extract_texts').show();
+});
 
 $('#pdf_download').click(async function(eve){
     show_spinner();
-    var res = await AjaxRequest('/download_pdf', 'GET');
+    await AjaxRequest('/download_pdf', 'GET');
     hide_spinner();
-})
+});
+
+$('#extract_texts').click(async function(eve){
+    show_spinner();
+    await AjaxRequest('/extract_texts', 'GET');
+    hide_spinner();
+});

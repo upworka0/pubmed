@@ -1,14 +1,22 @@
 #!/usr/bin/env python
-from flask import Flask, render_template, request, jsonify, session
+import os
+import time
+import glob
+import shutil
 import requests
+
+from flask import Flask, render_template, request, jsonify, session
 from scrap_module import Scraping_Job
 from scrap_pubmed import Pubmed_Job
 from clinical import get_numbers
 from datetime import datetime
 from pdf_downloader.downloader import Downloader
+from text_extract import text_extract
+
 
 app = Flask(__name__)
 app.secret_key = "mSu*B!m+RyQoG_pL3cE-ps~j%.?u-tbt;e-JvHsX$-l]6;Q}"
+global downloads_folder
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -68,10 +76,39 @@ def download_pdf():
     if 'csv_name' in session:
         csv_name = session['csv_name'] + ".csv"
         downloader_obj = Downloader(csv_name)
+        global downloads_folder
+        downloads_folder = downloader_obj.download_dir
+        print(downloads_folder)
         downloader_obj.run()
         session.pop('csv_name', None)
         return jsonify({'results': "Check downloads folder."})
     return jsonify({'results': "No csv found"})
+
+
+@app.route('/extract_texts', methods=['GET'])
+def extract_texts():
+    global downloads_folder
+    if "downloads_folder" in globals():
+        print("")
+        for filepath in glob.iglob(os.path.join(downloads_folder, "*.pdf")):
+            print("")
+            print(filepath)
+            try:
+                text = text_extract.extract_text(filepath).decode("utf-8")
+                filename = os.path.basename(filepath).split(".")[0]
+                new_dir = os.path.join(downloads_folder, os.path.basename(filepath).split(".")[0])
+                os.mkdir(new_dir)
+                time.sleep(1)
+                shutil.move(os.path.join(downloads_folder, filepath), new_dir)
+                time.sleep(1)
+
+                txt_path = os.path.join(new_dir, filename + ".txt")
+
+                with open(txt_path, "w") as f:
+                    f.write(text)
+            except Exception as e:
+                print(e)
+    return jsonify({'results': "Please download the PDFs"})
 
 
 if __name__ == '__main__':

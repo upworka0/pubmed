@@ -14,5 +14,18 @@ class NoPDFLinkFound(Exception):
 
 
 class CanNotCreateFolder(Exception):
-    """raised when the scraper can not create a folder for storing the PDFs"""
+    """Raised when the scraper can not create a folder for storing the PDFs"""
     pass
+
+
+class CanNotGetPageSource(Exception):
+    """Raised when the URL can't be fetched"""
+    pass
+
+
+class DownloadOperationException(Exception):
+    """Raised when an error occurs while downloading the file"""
+
+
+class CanNotChangeFileName(Exception):
+    """Raised when an errors occurs (like permission error) while changing file name"""
