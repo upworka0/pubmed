@@ -31,6 +31,11 @@ def get_suggestions():
 
 @app.route('/clinical_scrap', methods=['POST'])
 def clinical_scrap():
+    """
+        Clinical && Pumbed scrap
+
+        Extracting NCT records from clinical website and scraping data from pumbed based on them
+    """
     print(datetime.now())
     conditions_disease = request.form.get('conditions_disease')
     other_terms = request.form.get('other_terms')
@@ -49,6 +54,7 @@ def clinical_scrap():
 
 @app.route('/scrap', methods=['POST'])
 def scrap():
+    """ Extracting data from pumbed """
     print(datetime.now())
     keyword = request.form.get('keyword')
     results, excel_file, file_name = Scraping_Job(keyword=keyword, result_folder="static/downloads")
