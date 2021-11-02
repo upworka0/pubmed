@@ -10,6 +10,7 @@ import csv
 from multiprocessing import Process, Manager
 import math
 from werkzeug.utils import secure_filename
+from utils import write_csv, excel_out, get_thread_range
 
 
 class ScrapingUnit:
@@ -329,37 +330,6 @@ class MultiThread(Process):
                     self.results_dict += unit.results_dict
                     print("After", page_number, len(self.results), len(self.results_dict))
                     break
-
-
-def write_csv(csv_file, data):
-    """
-    Write lines to csv named as filename
-    """
-    with open(csv_file, 'w', encoding='utf-8', newline='') as writeFile:
-        writer = csv.writer(writeFile, delimiter=',')
-        writer.writerows(data)
-
-
-def excel_out(csv_file, excel_file):
-    # convert csv file to excel format
-    with ExcelWriter(excel_file) as ew:
-        df = pandas.read_csv(csv_file)
-        df.to_excel(ew, sheet_name="sheet1", index=False)
-
-
-def get_thread_range(thread_count, total_count):
-    ranges = []
-    for i in range(thread_count):
-        ranges.append([])
-    count = 1
-    while count < total_count:
-        for i in range(thread_count):
-            count += 1
-            ranges[i].append(count)
-            if count == total_count:
-                break
-
-    return ranges
 
 
 def Scraping_Job(keyword, result_folder):
