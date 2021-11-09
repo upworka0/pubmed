@@ -55,6 +55,9 @@ class MultiThread(Process):
 
 
 class Clinical:
+    """
+    Extract data from clilical using requests module
+    """
 
     def __init__(self, query_id=None, page_range=None):
         self.post_url = ''
@@ -134,6 +137,9 @@ def get_thread_range(thread_count, total_count):
 
 
 def get_numbers(keyword):
+    """
+    Retrieving total NCT numbers by using clinical module
+    """
     clinical = Clinical()
 
     manager = Manager()

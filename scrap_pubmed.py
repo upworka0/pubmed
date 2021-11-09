@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""
+    Scraping module for pumbed and clinical
+"""
+
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -11,6 +15,8 @@ from dotenv import load_dotenv
 from multiprocessing import Process, Manager
 import math
 from werkzeug.utils import secure_filename
+from utils import write_csv, excel_out, get_thread_range
+
 
 load_dotenv()
 
@@ -20,11 +26,14 @@ GENERAL_PROXY = os.environ.get('GENERAL_PROXY')
 CREDENTIAL = os.environ.get('CREDENTIAL')
 NCT_COUNT = 500
 
+"""
+Scraping module extended with Clinical NCT numbers
+It is using for /clinical_scrap route in application
+"""
+
 
 class ScrapingUnit:
-    """
-        Scraping Unit
-        """
+    """Scraping Unit"""
     def __init__(self, nct_records=None, page_number=1, csrfmiddlewaretoken="", session=None):
         self.nct_records = nct_records
         self.base_url = "https://pubmed.ncbi.nlm.nih.gov/"
@@ -65,16 +74,16 @@ class ScrapingUnit:
 
     def get_soup(self, response):
         """
-            Return soup object from http response
-        :param response:
+        Return soup object from http response
+        :param response
         :return: BeautifulSoup4 object
         """
         return BeautifulSoup(response.text, "html.parser")
 
     def get_middleware_token(self, soup):
         """
-            Get csrfmiddlewaretoken from Soup
-        :param soup:
+        Get csrfmiddlewaretoken from Soup
+        :param soup
         :return: None
         """
         try:
@@ -84,8 +93,8 @@ class ScrapingUnit:
 
     def get_total_count(self, soup):
         """
-            Get Total count of search results
-        :param soup:
+        Get Total count of search results
+        :param soup
         :return: None
         """
         try:
@@ -101,9 +110,9 @@ class ScrapingUnit:
     def get_text(self, soup, ele, condition):
         """
         Get Text of Element from soup by condition
-        :param soup:
-        :param ele:
-        :param condition:
+        :param soup
+        :param ele
+        :param condition
         :return: string
         """
         try:
@@ -115,7 +124,7 @@ class ScrapingUnit:
     def ajdust_abstract(self, abstract):
         """
         Remove unnecessary blanks and paragraphs
-        :param abstract:
+        :param abstract
         :return: string
         """
         slices = abstract.split('\n')
@@ -130,7 +139,7 @@ class ScrapingUnit:
     def get_affiliations(self, article):
         """
         Return affiliation and author email
-        :param article:
+        :param article
         :return: string, string
         """
         affiliations_div = article.find('div', {'class': 'affiliations'})
@@ -157,13 +166,12 @@ class ScrapingUnit:
         return affiliation, author_email
 
     def get_date(self, full_view):
-        """
-            Return date of Absctact
-            """
+        """Return date of Absctact"""
         text = self.get_text(full_view, 'span', {"class": "cit"})
         return text.split(";")[0]
 
     def get_cond_inter_out(self, condition):
+        """Get Conditions from Html content"""
         conditions = ''
         condition_soup = BeautifulSoup(condition, 'html.parser')
         lis = condition_soup.find_all('li')
@@ -177,7 +185,7 @@ class ScrapingUnit:
     def get_header_information(self, article):
         """
         Return title, DOI, link, author names, abstract, affiliation and author email
-        :param article:
+        :param article
         :return: dict
         """
         # full_view = article.find('div', {'class': 'full-view'})
@@ -218,7 +226,7 @@ class ScrapingUnit:
     def get_full_text_links(self, article):
         """
         Return full text links from soup
-        :param article:
+        :param article
         :return: array
         """
         full_text_links = []
@@ -233,7 +241,7 @@ class ScrapingUnit:
     def get_mesh_terms(self, article):
         """
         Return array of mesh terms from soup
-        :param article:
+        :param article
         :return: array
         """
         mesh_terms = []
@@ -248,7 +256,7 @@ class ScrapingUnit:
     def get_publication_types(self, article):
         """
         Return publication types from soup
-        :param article:
+        :param article
         :return: array
         """
         pub_types = []
@@ -413,22 +421,32 @@ class MultiThread(Process):
         self.results_dict = results_dict
 
     def make_rearrange(self):
-        count = len(self._range) // NCT_COUNT + 1
-        for i in range(count):
-            item = []
-            if i == count-1:
-                for j in range(i*NCT_COUNT, len(self._range)):
-                    item.append(self._range[j])
-            else:
-                for j in range(i*NCT_COUNT, (i+1)*NCT_COUNT):
-                    item.append(self._range[j])
-            self._rearrange.append(item)
+        count = len(self._range)  # NCT_COUNT + 1
+
+        # if count of range is less than NCT_COUNT, it will be added directly.
+        if len(self._range) < NCT_COUNT:
+            self._rearrange = [self._range]
+        else:
+            for i in range(count):
+                item = []
+                if i == count-1:
+                    for j in range(i*NCT_COUNT, len(self._range)):
+                        item.append(self._range[j])
+                else:
+                    for j in range(i*NCT_COUNT, (i+1)*NCT_COUNT):
+                        item.append(self._range[j])
+                self._rearrange.append(item)
+        print(self._rearrange)
 
     def make_query(self, _ran):
-        query = ''
+        query = '('
         for i in _ran:
-            query += ') OR (' + self.nct_records[i][1]
-        return query[5:] + ')'
+            query += '(' + self.nct_records[i][1] + ') OR '
+
+        return query[:-4] + """) 
+                AND ((clinicalstudy[Filter] OR clinicaltrial[Filter] OR clinicaltrialphasei[Filter] OR 
+                clinicaltrialphaseii[Filter] OR clinicaltrialphaseiii[Filter] OR clinicaltrialphaseiv[Filter] 
+                OR controlledclinicaltrial[Filter] OR pragmaticclinicaltrial[Filter]) AND (fft[Filter]))"""
 
     def run(self):
         self.make_rearrange()
@@ -442,37 +460,10 @@ class MultiThread(Process):
                 print("After", len(self.results), len(self.results_dict))
 
 
-def write_csv(csv_file, data):
-    """
-    Write lines to csv named as filename
-    """
-    with open(csv_file, 'w', encoding='utf-8', newline='') as writeFile:
-        writer = csv.writer(writeFile, delimiter=',')
-        writer.writerows(data)
-
-
-def excel_out(csv_file, excel_file):
-    # convert csv file to excel format
-    with ExcelWriter(excel_file) as ew:
-        df = pandas.read_csv(csv_file)
-        df.to_excel(ew, sheet_name="sheet1", index=False)
-
-
-def get_thread_range(thread_count, total_count):
-    ranges = []
-    for i in range(thread_count):
-        ranges.append([])
-    count = 0
-    while count < total_count:
-        for i in range(thread_count):
-            count += 1
-            ranges[i].append(count-1)
-            if count == total_count:
-                break
-    return ranges
-
-
 def Pubmed_Job(keyword, numbers, result_folder):
+    """
+    Scraping module extended with Clinical NCT numbers
+    """
     dir_name = os.path.dirname(__file__)
 
     manager = Manager()

@@ -242,9 +242,9 @@ $('#submit').click(async function(eve){
     populate_table();
 
     if (excel_file === "" || excel_file === null)
-        $('#export_button').attr('disabled', true);
+        $('#export_button').css('display', 'none');
     else
-        $('#export_button').attr('disabled', false);
+        $('#export_button').css('display', '');
 
     hide_spinner();
     $('#pdf_download').show();
@@ -274,9 +274,9 @@ $('#clinical_submit').click(async function(eve){
     populate_clinical_table();
 
     if (excel_file === "" || excel_file === null)
-        $('#export_button').attr('disabled', true);
+        $('#export_button').css('display', 'none');
     else
-        $('#export_button').attr('disabled', false);
+        $('#export_button').css('display', '');
 
     hide_spinner();
     $('#pdf_download').show();
@@ -285,12 +285,14 @@ $('#clinical_submit').click(async function(eve){
 
 $('#pdf_download').click(async function(eve){
     show_spinner();
-    await AjaxRequest('/download_pdf', 'GET');
+    const res = await AjaxRequest('/download_pdf', 'GET');
     hide_spinner();
+    alert(res.results);
 });
 
 $('#extract_texts').click(async function(eve){
     show_spinner();
-    await AjaxRequest('/extract_texts', 'GET');
+    const res = await AjaxRequest('/extract_texts', 'GET');
     hide_spinner();
+    alert(res.results);
 });

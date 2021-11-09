@@ -56,7 +56,7 @@
 		    		<div class="col-md-10 offset-md-1 mb-1 mt-5">
 			            <h3 class="text-center mb-3">PubMed.gov Search</h3>
 			            <div class="row">
-			            	<div class="col-md-8">
+			            	<div class="col-md-12">
 			            		<div class="input-group form-group">
 					                <input type="text" class="form-control typeahead border-primary" name="query" id="query" placeholder="Start typing something to search..." data-provide="typeahead" autocomplete="off">
 					                <div class="input-group-append">
@@ -64,18 +64,21 @@
 					                        <i class="fa fa-search"></i>
 					                    </button>
 					                </div>
-								<button id="pdf_download" style="display: none; margin-left: 20px" class="btn btn-primary">
-									Download PDFs
-								</button>
-								<button id="extract_texts" style="display: none; margin-left: 20px" class="btn btn-primary">
-									Extract Texts
-								</button>
+                                    <a type="button" href="/clinical" value="To Clinical" class="btn btn-primary btn-border ml-4" style="width: 105px;" title="Toggle" >To Clinical</a>
 					            </div>
 			            	</div>
-			            	<div class="col-md-4">
+			            	<div class="col-md-12">
 			            		<div class="form-group d-flex">
-			            			<input type="button" id="export_button" name="export_button" value="Export file" class="btn btn-light btn-border" title="Export result" onclick="export_excel();" disabled>
-									<a type="button" href="/clinical" value="To Clinical" class="btn btn-primary btn-border ml-3" style="width: 105px;" title="Toggle" >To Clinical</a>
+                                    <input type="button" id="export_button" name="export_button" value="Export file"
+                                           class="btn btn-primary" title="Export result" onclick="export_excel();"
+                                           style="display: none;"
+                                    >
+                                    <button id="pdf_download" style="display:none; margin-left: 20px" class="btn btn-primary">
+                                        Download PDFs
+                                    </button>
+                                    <button id="extract_texts" style="display:none; margin-left: 20px" class="btn btn-primary">
+                                        Extract Texts
+                                    </button>
 			            		</div>
 			            	</div>
 			            </div>

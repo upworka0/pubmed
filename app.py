@@ -89,7 +89,7 @@ def download_pdf():
 def extract_texts():
     global downloads_folder
     if "downloads_folder" in globals():
-        print("")
+        print(downloads_folder)
         for filepath in glob.iglob(os.path.join(downloads_folder, "*.pdf")):
             print("")
             print(filepath)
@@ -108,7 +108,7 @@ def extract_texts():
                     f.write(text)
             except Exception as e:
                 print(e)
-    return jsonify({'results': "Please download the PDFs"})
+    return jsonify({'results': "Text extraction was finished, Please download the PDFs."})
 
 
 if __name__ == '__main__':
