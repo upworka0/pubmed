@@ -63,3 +63,22 @@ def get_thread_range(thread_count, total_count):
                 break
 
     return ranges
+
+
+def get_thread_range_pumbed(thread_count, total_count):
+    """
+    Divide total units into array of threads
+    @return: array
+    """
+    ranges = []
+    for i in range(thread_count):
+        ranges.append([])
+    count = 1
+    while count < total_count:
+        for i in range(thread_count):
+            count += 1
+            ranges[i].append(count)
+            if count == total_count:
+                break
+
+    return ranges

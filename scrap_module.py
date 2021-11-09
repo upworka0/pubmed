@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+"""
+    Scraping module for only pumbed
+"""
 import requests
 from bs4 import BeautifulSoup
 import time
@@ -10,7 +13,7 @@ import csv
 from multiprocessing import Process, Manager
 import math
 from werkzeug.utils import secure_filename
-from utils import write_csv, excel_out, get_thread_range
+from utils import write_csv, excel_out, get_thread_range_pumbed
 
 
 class ScrapingUnit:
@@ -357,7 +360,7 @@ def Scraping_Job(keyword, result_folder):
     threads = []
     # Thread count
     thread_count = 4
-    ranges = get_thread_range(thread_count=thread_count, total_count=math.ceil(total_count/100))
+    ranges = get_thread_range_pumbed(thread_count=thread_count, total_count=math.ceil(total_count/100))
 
     for page_range in ranges:
         thread = MultiThread(

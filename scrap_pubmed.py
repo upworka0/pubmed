@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""
+    Scraping module for pumbed and clinical
+"""
+
 import requests
 from bs4 import BeautifulSoup
 import re
