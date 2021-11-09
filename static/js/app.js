@@ -242,9 +242,9 @@ $('#submit').click(async function(eve){
     populate_table();
 
     if (excel_file === "" || excel_file === null)
-        $('#export_button').attr('disabled', true);
+        $('#export_button').css('display', 'none');
     else
-        $('#export_button').attr('disabled', false);
+        $('#export_button').css('display', '');
 
     hide_spinner();
     $('#pdf_download').show();
@@ -274,9 +274,9 @@ $('#clinical_submit').click(async function(eve){
     populate_clinical_table();
 
     if (excel_file === "" || excel_file === null)
-        $('#export_button').attr('disabled', true);
+        $('#export_button').css('display', 'none');
     else
-        $('#export_button').attr('disabled', false);
+        $('#export_button').css('display', '');
 
     hide_spinner();
     $('#pdf_download').show();
