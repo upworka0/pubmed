@@ -54,11 +54,11 @@ def get_thread_range(thread_count, total_count):
     ranges = []
     for i in range(thread_count):
         ranges.append([])
-    count = 1
+    count = 0
     while count < total_count:
         for i in range(thread_count):
             count += 1
-            ranges[i].append(count)
+            ranges[i].append(count-1)
             if count == total_count:
                 break
 

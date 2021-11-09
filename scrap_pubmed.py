@@ -418,22 +418,28 @@ class MultiThread(Process):
 
     def make_rearrange(self):
         count = len(self._range)  # NCT_COUNT + 1
-        for i in range(count):
-            item = []
-            if i == count-1:
-                for j in range(i*NCT_COUNT, len(self._range)):
-                    item.append(self._range[j])
-            else:
-                for j in range(i*NCT_COUNT, (i+1)*NCT_COUNT):
-                    item.append(self._range[j])
-            self._rearrange.append(item)
+
+        # if count of range is less than NCT_COUNT, it will be added directly.
+        if len(self._range) < NCT_COUNT:
+            self._rearrange = [self._range]
+        else:
+            for i in range(count):
+                item = []
+                if i == count-1:
+                    for j in range(i*NCT_COUNT, len(self._range)):
+                        item.append(self._range[j])
+                else:
+                    for j in range(i*NCT_COUNT, (i+1)*NCT_COUNT):
+                        item.append(self._range[j])
+                self._rearrange.append(item)
+        print(self._rearrange)
 
     def make_query(self, _ran):
         query = '('
         for i in _ran:
-            query += ') OR (' + self.nct_records[i][1]
+            query += '(' + self.nct_records[i][1] + ') OR '
 
-        return query[5:] + """)) 
+        return query[:-4] + """) 
                 AND ((clinicalstudy[Filter] OR clinicaltrial[Filter] OR clinicaltrialphasei[Filter] OR 
                 clinicaltrialphaseii[Filter] OR clinicaltrialphaseiii[Filter] OR clinicaltrialphaseiv[Filter] 
                 OR controlledclinicaltrial[Filter] OR pragmaticclinicaltrial[Filter]) AND (fft[Filter]))"""
