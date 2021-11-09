@@ -47,6 +47,10 @@ def excel_out(csv_file, excel_file):
 
 
 def get_thread_range(thread_count, total_count):
+    """
+    Divide total units into array of threads
+    @return: array
+    """
     ranges = []
     for i in range(thread_count):
         ranges.append([])

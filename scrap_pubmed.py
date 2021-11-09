@@ -29,9 +29,7 @@ It is using for /clinical_scrap route in application
 
 
 class ScrapingUnit:
-    """
-        Scraping Unit
-        """
+    """Scraping Unit"""
     def __init__(self, nct_records=None, page_number=1, csrfmiddlewaretoken="", session=None):
         self.nct_records = nct_records
         self.base_url = "https://pubmed.ncbi.nlm.nih.gov/"
@@ -72,16 +70,16 @@ class ScrapingUnit:
 
     def get_soup(self, response):
         """
-            Return soup object from http response
-        :param response:
+        Return soup object from http response
+        :param response
         :return: BeautifulSoup4 object
         """
         return BeautifulSoup(response.text, "html.parser")
 
     def get_middleware_token(self, soup):
         """
-            Get csrfmiddlewaretoken from Soup
-        :param soup:
+        Get csrfmiddlewaretoken from Soup
+        :param soup
         :return: None
         """
         try:
@@ -91,8 +89,8 @@ class ScrapingUnit:
 
     def get_total_count(self, soup):
         """
-            Get Total count of search results
-        :param soup:
+        Get Total count of search results
+        :param soup
         :return: None
         """
         try:
@@ -108,9 +106,9 @@ class ScrapingUnit:
     def get_text(self, soup, ele, condition):
         """
         Get Text of Element from soup by condition
-        :param soup:
-        :param ele:
-        :param condition:
+        :param soup
+        :param ele
+        :param condition
         :return: string
         """
         try:
@@ -122,7 +120,7 @@ class ScrapingUnit:
     def ajdust_abstract(self, abstract):
         """
         Remove unnecessary blanks and paragraphs
-        :param abstract:
+        :param abstract
         :return: string
         """
         slices = abstract.split('\n')
@@ -137,7 +135,7 @@ class ScrapingUnit:
     def get_affiliations(self, article):
         """
         Return affiliation and author email
-        :param article:
+        :param article
         :return: string, string
         """
         affiliations_div = article.find('div', {'class': 'affiliations'})
@@ -164,13 +162,12 @@ class ScrapingUnit:
         return affiliation, author_email
 
     def get_date(self, full_view):
-        """
-            Return date of Absctact
-            """
+        """Return date of Absctact"""
         text = self.get_text(full_view, 'span', {"class": "cit"})
         return text.split(";")[0]
 
     def get_cond_inter_out(self, condition):
+        """Get Conditions from Html content"""
         conditions = ''
         condition_soup = BeautifulSoup(condition, 'html.parser')
         lis = condition_soup.find_all('li')
@@ -184,7 +181,7 @@ class ScrapingUnit:
     def get_header_information(self, article):
         """
         Return title, DOI, link, author names, abstract, affiliation and author email
-        :param article:
+        :param article
         :return: dict
         """
         # full_view = article.find('div', {'class': 'full-view'})
@@ -225,7 +222,7 @@ class ScrapingUnit:
     def get_full_text_links(self, article):
         """
         Return full text links from soup
-        :param article:
+        :param article
         :return: array
         """
         full_text_links = []
@@ -240,7 +237,7 @@ class ScrapingUnit:
     def get_mesh_terms(self, article):
         """
         Return array of mesh terms from soup
-        :param article:
+        :param article
         :return: array
         """
         mesh_terms = []
@@ -255,7 +252,7 @@ class ScrapingUnit:
     def get_publication_types(self, article):
         """
         Return publication types from soup
-        :param article:
+        :param article
         :return: array
         """
         pub_types = []
@@ -420,7 +417,7 @@ class MultiThread(Process):
         self.results_dict = results_dict
 
     def make_rearrange(self):
-        count = len(self._range) // NCT_COUNT + 1
+        count = len(self._range)  # NCT_COUNT + 1
         for i in range(count):
             item = []
             if i == count-1:
@@ -432,10 +429,14 @@ class MultiThread(Process):
             self._rearrange.append(item)
 
     def make_query(self, _ran):
-        query = ''
+        query = '('
         for i in _ran:
             query += ') OR (' + self.nct_records[i][1]
-        return query[5:] + ')'
+
+        return query[5:] + """)) 
+                AND ((clinicalstudy[Filter] OR clinicaltrial[Filter] OR clinicaltrialphasei[Filter] OR 
+                clinicaltrialphaseii[Filter] OR clinicaltrialphaseiii[Filter] OR clinicaltrialphaseiv[Filter] 
+                OR controlledclinicaltrial[Filter] OR pragmaticclinicaltrial[Filter]) AND (fft[Filter]))"""
 
     def run(self):
         self.make_rearrange()
