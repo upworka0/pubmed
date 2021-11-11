@@ -44,6 +44,7 @@ def clinical_scrap():
 
         Extracting NCT records from clinical website and scraping data from pumbed based on them
     """
+    print('Clinical Scraping stated.')
     print(datetime.now())
     conditions_disease = request.form.get('conditions_disease')
     other_terms = request.form.get('other_terms')
@@ -54,9 +55,12 @@ def clinical_scrap():
     nct_numbers = get_numbers(keyword=keyword)
     if nct_numbers is None:
         return jsonify({'results': [], 'excel_file': ''})
+
+    print('Pumbed Scraping with NCT Numbers stated.')
     results, excel_file, file_name = Pubmed_Job(keyword=keyword, numbers=nct_numbers, result_folder="static/downloads")
     session['csv_name'] = file_name
     print(datetime.now())
+    print('Clinical Scraping END.')
     return jsonify({'results': results, 'excel_file': excel_file})
 
 
