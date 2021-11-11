@@ -280,9 +280,8 @@ class ScrapingUnit:
         self.parse_soup(soup)
 
     def do_scraping(self):
-        print("Scraping is starting in page %s" % self.page_number)
-
         if self.page_number < 2:
+            print("Scraping is starting in page %s" % self.page_number)
             data = {
                 "term": self.keyword,
                 "size": 100,

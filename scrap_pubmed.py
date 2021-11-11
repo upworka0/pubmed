@@ -367,9 +367,8 @@ class ScrapingUnit:
         return None
 
     def do_scraping(self, keyword=None):
-        print("Scraping is starting in page %s" % self.page_number)
-
         if self.page_number < 2:
+            print("Scraping is starting in page %s" % self.page_number)
             data = {
                 "term": keyword,
                 "size": 200,
