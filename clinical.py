@@ -22,7 +22,7 @@ def get_query_id(content):
     soup = parse_soup(content)
 
     wrappers = soup.select('.ct-inner_content_wrapper > .w3-center')
-    if len(wrappers) > 1:
+    if len(wrappers) > 0:
         total_count = int(wrappers[0].text.split(' ')[0])
 
     script = soup.find('script', text=re.compile('use strict'))
@@ -33,9 +33,10 @@ def get_query_id(content):
             return _group.group(1), total_count
         else:
             print('Not found group on script tag')
-        return None, None
+        return None, 0
     else:
         print('Not found Script Tag')
+    return None, 0
 
 
 class MultiThread(Process):
@@ -79,6 +80,8 @@ class Clinical:
         res = self.do_request(BASE_URL, params)
         if res is not None:
             return get_query_id(res.text)
+
+        return None, 0
 
     def run(self):
         records = []
@@ -146,7 +149,7 @@ def get_numbers(keyword):
     results = manager.list()
 
     query_id, total_count = clinical.get_thread_count(keyword=keyword)
-
+    print(f'Clinical Total Count: {total_count}, Query ID: {query_id}')
     if total_count > 20000:
         total_count = 20000
 

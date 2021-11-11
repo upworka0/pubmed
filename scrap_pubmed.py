@@ -484,18 +484,20 @@ def Pubmed_Job(keyword, numbers, result_folder):
     # Thread count
     thread_count = 5
     ranges = get_thread_range(thread_count=thread_count, total_count=math.ceil(len(numbers)))
+    print('Thread ranges', ranges)
 
     for _range in ranges:
-        thread = MultiThread(
-            nct_records=numbers,
-            csrfmiddlewaretoken=csrfmiddlewaretoken,
-            _range=_range,
-            session=session,
-            results=results,
-            results_dict=results_dict
-        )
-        thread.start()
-        threads.append(thread)
+        if len(_range) > 0:
+            thread = MultiThread(
+                nct_records=numbers,
+                csrfmiddlewaretoken=csrfmiddlewaretoken,
+                _range=_range,
+                session=session,
+                results=results,
+                results_dict=results_dict
+            )
+            thread.start()
+            threads.append(thread)
 
     for thread in threads:
         thread.join()
