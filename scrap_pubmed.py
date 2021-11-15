@@ -442,8 +442,7 @@ class MultiThread(Process):
         for i in _ran:
             query += '(' + self.nct_records[i][1] + ') OR '
 
-        return query[:-4] + """) 
-                AND ((clinicalstudy[Filter] OR clinicaltrial[Filter] OR clinicaltrialphasei[Filter] OR 
+        return query[:-4] + """) AND ((clinicalstudy[Filter] OR clinicaltrial[Filter] OR clinicaltrialphasei[Filter] OR 
                 clinicaltrialphaseii[Filter] OR clinicaltrialphaseiii[Filter] OR clinicaltrialphaseiv[Filter] 
                 OR controlledclinicaltrial[Filter] OR pragmaticclinicaltrial[Filter]))"""
 
