@@ -8,7 +8,6 @@ static/suit/
 /test.py
 
 # Downloaded files
-static/downloads/
 
 ### Django ###
 *.log
@@ -19,4 +18,3 @@ db.sqlite3-journal
 
 *.csv
 output/
-downloads
