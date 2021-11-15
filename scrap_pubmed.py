@@ -435,7 +435,7 @@ class MultiThread(Process):
                     for j in range(i*NCT_COUNT, (i+1)*NCT_COUNT):
                         item.append(self._range[j])
                 self._rearrange.append(item)
-        print(self._rearrange)
+        # print(self._rearrange)
 
     def make_query(self, _ran):
         query = '('
@@ -445,12 +445,15 @@ class MultiThread(Process):
         return query[:-4] + """) 
                 AND ((clinicalstudy[Filter] OR clinicaltrial[Filter] OR clinicaltrialphasei[Filter] OR 
                 clinicaltrialphaseii[Filter] OR clinicaltrialphaseiii[Filter] OR clinicaltrialphaseiv[Filter] 
-                OR controlledclinicaltrial[Filter] OR pragmaticclinicaltrial[Filter]) AND (fft[Filter]))"""
+                OR controlledclinicaltrial[Filter] OR pragmaticclinicaltrial[Filter]))"""
 
     def run(self):
         self.make_rearrange()
         unit = ScrapingUnit(nct_records=self.nct_records, csrfmiddlewaretoken=self.csrfmiddlewaretoken)
         for _ran in self._rearrange:
+            print()
+            print(self.make_query(_ran))
+            print()
             unit.do_scraping(keyword=self.make_query(_ran))
             if len(unit.results) > 0:
                 print("Before", len(self.results), len(self.results_dict))

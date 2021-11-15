@@ -272,8 +272,10 @@ class ScrapingUnit:
         while res is None:
             try:
                 res = self.session.post(url=url, data=data, headers=headers, timeout=60)
+                time.sleep(1)
             except Exception as e:
                 print(e, self.page_number)
+                time.sleep(1)
 
         soup = self.get_soup(res)
         self.get_middleware_token(soup)
