@@ -8,6 +8,7 @@ static/suit/
 /test.py
 
 # Downloaded files
+static/downloads/*
 
 ### Django ###
 *.log
