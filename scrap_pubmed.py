@@ -361,9 +361,11 @@ class ScrapingUnit:
         self.get_middleware_token(soup)
         self.parse_soup(soup)
 
+        print("Scraping was ended for page %s" % self.page_number)
         if self.total_count > self.page_number * 200:
             self.page_number += 1
             return self.next_page(keyword=keyword)
+
         return None
 
     def do_scraping(self, keyword=None):
@@ -382,11 +384,13 @@ class ScrapingUnit:
                 try:
                     res = self.session.get(self.base_url, params=data, headers=headers)
                     if res.status_code != requests.codes.ok:
+                        print("Scraping was ended for page %s" % self.page_number)
                         return None
                     soup = self.get_soup(res)
                     self.get_middleware_token(soup)
                     self.get_total_count(soup)
                     if self.total_count == 0:
+                        print("Scraping was ended for page %s" % self.page_number)
                         return None
                     if self.total_count == 1:
                         self.unique_soup(soup)
@@ -394,15 +398,17 @@ class ScrapingUnit:
                         self.parse_soup(soup)
                     break
                 except Exception as e:
-                    print(e)
+                    print(e, keyword)
+                    time.sleep(1)
                     continue
+
+            print("Scraping was ended for page %s" % self.page_number)
             if self.total_count > self.page_number * 200:
                 self.page_number += 1
                 return self.do_scraping(keyword=keyword)
             return None
         else:
             self.next_page(keyword=keyword)
-        print("Scraping was ended for page %s" % self.page_number)
 
 
 class MultiThread(Process):
@@ -441,19 +447,19 @@ class MultiThread(Process):
         query = '('
         for i in _ran:
             query += '(' + self.nct_records[i][1] + ') OR '
-
-        return query[:-4] + """) 
-                AND ((clinicalstudy[Filter] OR clinicaltrial[Filter] OR clinicaltrialphasei[Filter] OR 
-                clinicaltrialphaseii[Filter] OR clinicaltrialphaseiii[Filter] OR clinicaltrialphaseiv[Filter] 
-                OR controlledclinicaltrial[Filter] OR pragmaticclinicaltrial[Filter]))"""
+        print(query[:-4] + ")")
+        return query[:-4] + ")"
+        # return query[:-4] + """) AND ((clinicalstudy[Filter] OR clinicaltrial[Filter] OR clinicaltrialphasei[Filter] OR
+        #         clinicaltrialphaseii[Filter] OR clinicaltrialphaseiii[Filter] OR clinicaltrialphaseiv[Filter]
+        #         OR controlledclinicaltrial[Filter] OR pragmaticclinicaltrial[Filter]))"""
 
     def run(self):
         self.make_rearrange()
         unit = ScrapingUnit(nct_records=self.nct_records, csrfmiddlewaretoken=self.csrfmiddlewaretoken)
         for _ran in self._rearrange:
-            print()
-            print(self.make_query(_ran))
-            print()
+            # print()
+            # print(self.make_query(_ran))
+            # print()
             unit.do_scraping(keyword=self.make_query(_ran))
             if len(unit.results) > 0:
                 print("Before", len(self.results), len(self.results_dict))
