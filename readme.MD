@@ -1,4 +1,4 @@
-Extracting data form Pubmed website using Python
+Extracting data form Pubmed & Clinical website using Python
 ================================================
 
 The purpose of this project is to extract data of articles from pubmed website using python.
