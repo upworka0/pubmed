@@ -5,8 +5,15 @@ app = Chalice(app_name='scrapingUnit')
 
 @app.route('/')
 def index():
-    print(app.current_request.headers.get('host'))
+    print(app.current_request.headers)
+
     return {'hello': 'world'}
+
+
+@app.route('/get')
+def index():
+    print(app.current_request.headers)
+    return {'hello': 'world', 'ip': app.current_request.headers.get('host')}
 
 
 # The view function above will return {"hello": "world"}
